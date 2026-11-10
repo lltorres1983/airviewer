@@ -118,8 +118,8 @@
       .mobile-panel-header button { min-height: 44px; }
       .mobile-panel-content { overflow: auto; padding: 12px 16px 24px; overscroll-behavior: contain; scrollbar-color: #7dd3fc #10273b; }
       .mobile-panel [hidden] { display: none !important; }
-      .mobile-menu { display: grid; }
-      .mobile-menu button { min-height: 60px; padding: 16px 4px; text-align: left; background: transparent; border: 0; border-bottom: 1px solid #294258; border-radius: 0; font-size: 16px; }
+      .mobile-menu { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+      .mobile-menu button { min-height: 44px; padding: 10px 8px; text-align: left; background: transparent; border: 0; border-bottom: 1px solid #294258; border-radius: 0; font-size: 14px; }
       .mobile-menu button:hover { background: #10273b; }
       .mobile-empty { color: #bae6fd; font-size: 14px; line-height: 1.5; }
       .mobile-panel .airport-camera, .mobile-panel .telemetry, .mobile-panel .controls { position: static; width: 100% !important; min-width: 0; max-width: none; margin: 0; }
@@ -284,7 +284,6 @@
         <button type="button" data-mobile-view="camera">Câmera do aeroporto</button>
         <button type="button" data-mobile-view="flights">Próximos voos</button>
         <button type="button" data-mobile-view="details">Detalhes e fotos</button>
-        <button type="button" data-mobile-view="options">Opções</button>
       </div>
       <div id="mobile-camera" hidden><p class="mobile-empty" id="mobile-camera-empty">Não há câmera disponível para este aeroporto. Escolha outro em Opções.</p></div>
       <div id="mobile-flights" hidden><p class="mobile-empty" id="mobile-flights-empty">Selecione um aeroporto em Opções para consultar os próximos voos.</p></div>
@@ -411,7 +410,7 @@
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     const mobileMap = document.getElementById('mobile-map');
     let mobileView = 'map';
-    const mobileSections = ['menu', 'camera', 'flights', 'details', 'options'];
+    const mobileSections = ['camera', 'flights', 'details', 'options'];
     const mobileTitles = { menu: 'Menu', camera: 'Câmera', flights: 'Próximos voos', details: 'Detalhes e fotos', options: 'Opções' };
     const mobileDestinations = [
       [airportCamera, 'camera'], [arrivalsPanel, 'flights'],
@@ -428,6 +427,7 @@
       mobileMenuToggle.setAttribute('aria-expanded', String(view !== 'map'));
       if (view === 'map') mobileMap.setAttribute('aria-current', 'page');
       else mobileMap.removeAttribute('aria-current');
+      document.getElementById('mobile-menu').hidden = view !== 'options';
       mobileSections.forEach(section => { document.getElementById(`mobile-${section}`).hidden = section !== view; });
       document.getElementById('mobile-panel-title').textContent = mobileTitles[view] || 'Menu';
       document.querySelector('.mobile-panel-content').scrollTop = 0;
@@ -449,7 +449,7 @@
       if (!mobileViewport.matches && !cameraDismissed) showAirportCamera();
       if (map) map.resize();
     }
-    mobileMenuToggle.addEventListener('click', () => setMobileView(mobileView === 'menu' ? 'map' : 'menu'));
+    mobileMenuToggle.addEventListener('click', () => setMobileView(mobileView === 'options' ? 'map' : 'options'));
     mobileMap.addEventListener('click', () => setMobileView('map'));
     document.getElementById('mobile-panel-close').addEventListener('click', () => setMobileView('map'));
     document.querySelectorAll('[data-mobile-view]').forEach(button => {
