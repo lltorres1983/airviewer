@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Aeronave em 3D livre</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css">
   <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
@@ -17,29 +17,34 @@
     .telemetry { position: fixed; z-index: 5; left: 16px; top: 92px; min-width: 205px; padding: 11px 13px; white-space: pre-line; color: #dff5ff; background: rgba(4, 15, 27, .78); border-left: 3px solid #38bdf8; font: 600 13px/1.65 Consolas, monospace; backdrop-filter: blur(6px); }
     .telemetry.hidden { display: none; }
     .status { position: fixed; z-index: 6; left: 16px; bottom: 18px; color: #e5eef8; font-size: 13px; text-shadow: 0 1px 3px #000; }
-    .airport-camera { position: fixed; z-index: 8; left: 16px; bottom: 52px; width: min(420px, 38vw); max-width: calc(100vw - 32px); min-width: 300px; overflow: hidden; color: #e5eef8; background: rgba(4, 15, 27, .96); border: 1px solid #38bdf8; border-radius: 6px; box-shadow: 0 14px 38px rgba(0, 0, 0, .48); }
+    .airport-camera { position: fixed; z-index: 8; left: 16px; bottom: 110px; display: flex; flex-direction: column; width: var(--panel-width, 420px); height: var(--panel-height, 270px); max-width: calc(100vw - 32px); max-height: calc(100dvh - 200px); min-width: 300px; min-height: 180px; overflow: hidden; color: #e5eef8; background: rgba(4, 15, 27, .96); border: 1px solid #38bdf8; border-radius: 6px; box-shadow: 0 14px 38px rgba(0, 0, 0, .48); }
     .airport-camera.hidden, .airport-camera-source.hidden, .camera-toggle.hidden, .view-mode.hidden, .airport-photo.hidden { display: none; }
-    .airport-camera-header { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 7px 8px 7px 12px; }
+    .airport-camera-header { display: flex; flex-shrink: 0; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 40px; padding: 7px 30px 7px 12px; }
     .airport-camera-title { min-width: 0; flex: 1; }
     .airport-camera-title strong { display: block; color: #7dd3fc; font-size: 12px; }
     .airport-camera-title span { display: block; margin-top: 1px; color: #cbd5e1; font-size: 11px; }
     .airport-camera-header a { color: #e0f2fe; font-size: 12px; font-weight: 600; text-decoration: none; }
     .airport-camera-header a:hover { color: #7dd3fc; }
-    .airport-camera-source { max-width: 190px; padding: 4px 6px; color: #e0f2fe; background: #10273b; border: 1px solid #38bdf8; border-radius: 4px; font: inherit; font-size: 11px; }
+    .airport-camera-source { min-width: 0; max-width: 190px; padding: 4px 6px; color: #e0f2fe; background: #10273b; border: 1px solid #38bdf8; border-radius: 4px; font: inherit; font-size: 11px; }
     .airport-camera-close { width: 30px; height: 30px; padding: 0; font-size: 19px; line-height: 1; }
-    .airport-camera-video-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #000; }
-    .airport-camera-feed { position: relative; min-width: 0; aspect-ratio: 16 / 9; overflow: hidden; background: #000; }
+    .airport-camera-video-grid { display: grid; flex: 1; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #000; }
+    .airport-camera-feed { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: #000; }
     .airport-camera-feed.hidden { display: none; }
     .airport-camera-feed strong { position: absolute; z-index: 1; left: 6px; top: 5px; padding: 3px 5px; color: #e0f2fe; background: rgba(4, 15, 27, .82); border: 1px solid rgba(125, 211, 252, .55); border-radius: 3px; font-size: 10px; pointer-events: none; }
     .airport-camera-feed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-    .airport-camera-note { padding: 6px 9px; color: #bae6fd; background: #0b2034; border-top: 1px solid rgba(56, 189, 248, .32); font-size: 10px; line-height: 1.35; }
-    .right-rail { position: fixed; z-index: 8; top: 92px; right: 58px; display: flex; flex-direction: column; gap: 10px; width: min(360px, calc(100vw - 116px)); pointer-events: none; transform-origin: top right; }
+    .airport-camera-note { flex-shrink: 0; max-height: 70px; overflow: auto; padding: 6px 9px; color: #bae6fd; background: #0b2034; border-top: 1px solid rgba(56, 189, 248, .32); font-size: 10px; line-height: 1.35; }
+    .right-rail { position: fixed; z-index: 8; top: 92px; right: 58px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; width: max-content; max-width: calc(100vw - 116px); max-height: calc(100dvh - 210px); pointer-events: none; }
     .aircraft-photo, .airport-photo, .arrivals-panel { margin: 0; overflow: hidden; color: #e5eef8; background: rgba(4, 15, 27, .92); border: 1px solid rgba(56, 189, 248, .8); border-radius: 6px; box-shadow: 0 10px 28px rgba(0, 0, 0, .34); pointer-events: auto; }
     .aircraft-photo.hidden, .arrivals-panel.hidden { display: none; }
     .aircraft-photo img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #0f172a; }
-    .airport-photo img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #0f172a; }
+    .aircraft-photo { width: 360px; max-width: calc(100vw - 116px); }
+    .airport-photo { position: relative; display: flex; flex-direction: column; width: var(--panel-width, 414px); height: var(--panel-height, 280px); max-width: calc(100vw - 116px); min-height: 120px; }
+    .airport-photo img { display: block; flex: 1; min-height: 0; width: 100%; object-fit: contain; background: #0f172a; }
     .aircraft-photo figcaption { padding: 7px 10px; overflow: hidden; color: #bae6fd; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-    .airport-photo figcaption { padding: 7px 10px; overflow: hidden; color: #bae6fd; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .airport-photo figcaption { flex-shrink: 0; padding: 7px 10px 7px 30px; overflow: hidden; color: #bae6fd; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .arrivals-panel { position: relative; display: flex; flex-direction: column; width: var(--panel-width, 414px); height: var(--panel-height, 330px); max-width: calc(100vw - 116px); min-height: 220px; }
+    .arrivals-panel > :not(.traffic-view) { flex-shrink: 0; }
+    .traffic-view { display: flex; flex: 1; flex-direction: column; min-height: 0; }
     .arrivals-header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 9px 10px 7px; border-bottom: 1px solid rgba(56, 189, 248, .32); }
     .arrivals-header strong { color: #7dd3fc; font-size: 12px; }
     .arrivals-header span { color: #cbd5e1; font-size: 11px; }
@@ -53,9 +58,10 @@
     .traffic-dot.nearby { background: #94a3b8; }
     .traffic-dot.tracked { background: #ef4444; }
     .traffic-view.hidden { display: none; }
-    .schedule-source { display: block; padding: 6px 10px; color: #cbd5e1; font-size: 10px; }
+    .schedule-source { display: block; flex-shrink: 0; padding: 6px 10px 6px 30px; color: #cbd5e1; font-size: 10px; }
+    .schedule-source.hidden { display: none; }
     .schedule-source a { color: #7dd3fc; }
-    .arrivals-list, .schedule-list { max-height: 190px; overflow: auto; }
+    .arrivals-list, .schedule-list { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
     .arrival-row { display: grid; width: 100%; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 7px 10px; color: inherit; background: transparent; border: 0; border-bottom: 1px solid rgba(100, 116, 139, .25); border-radius: 0; text-align: left; }
     .arrival-row:last-child { border-bottom: 0; }
     .arrival-row:hover, .schedule-row:hover { background: rgba(14, 165, 233, .16); }
@@ -95,20 +101,71 @@
     body.night-mode .aircraft-marker { filter: drop-shadow(0 0 8px #f8fafc) drop-shadow(0 0 12px #ef4444); }
     body.night-mode .traffic-legend { color: #f8fafc; }
     .maplibregl-ctrl-top-right { top: 86px; }
-    @media (max-width: 650px) {
-      .route { font-size: 18px; }
-      .telemetry { left: 8px; top: 84px; min-width: 0; font-size: 11px; }
-      .status { left: 8px; bottom: 62px; }
-      .airport-camera { left: 8px; bottom: 104px; width: calc(100vw - 16px); min-width: 0; }
+    .panel-resize { position: absolute; z-index: 3; bottom: 0; left: 0; display: grid; width: 25px; height: 25px; place-items: center; padding: 0; color: #7dd3fc; background: #10273b; border: 0; border-radius: 0 5px 0 0; font-size: 19px; cursor: nesw-resize; touch-action: none; }
+    .airport-camera .panel-resize { inset: 0 0 auto auto; border-radius: 0 0 0 5px; }
+    .resizing-panel { user-select: none; cursor: nesw-resize; }
+    .resizing-panel iframe { pointer-events: none; }
+    .mobile-nav, .mobile-sheet-header, .mobile-panel-close { display: none; }
+    button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #fbbf24; outline-offset: 3px; }
+    @media (max-width: 760px), (max-height: 600px) {
+      #map { position: fixed; height: 100dvh; }
+      .topbar { top: calc(8px + env(safe-area-inset-top)); left: 8px; right: 60px; min-width: 0; padding: 8px 12px; transform: none; text-align: left; pointer-events: none; }
+      .eyebrow { display: none; }
+      .route { margin: 0; font-size: 16px; }
+      .aircraft-identity { overflow: hidden; font-size: 10px; white-space: nowrap; text-overflow: ellipsis; }
+      .telemetry { left: 8px; top: calc(76px + env(safe-area-inset-top)); min-width: 0; padding: 6px 9px; font-size: 10px; pointer-events: none; }
+      .status { left: 8px; right: 8px; bottom: calc(80px + env(safe-area-inset-bottom)); overflow: hidden; font-size: 10px; white-space: nowrap; text-overflow: ellipsis; pointer-events: none; }
+      .maplibregl-ctrl-top-right { top: calc(65px + env(safe-area-inset-top)); }
+      .maplibregl-ctrl-bottom-right { bottom: calc(66px + env(safe-area-inset-bottom)); }
+      .right-rail { display: contents; }
+      .right-rail .aircraft-photo, .panel-resize { display: none; }
+      .airport-camera, .airport-photo, .arrivals-panel, .controls {
+        position: fixed; z-index: 9; inset: auto 8px calc(76px + env(safe-area-inset-bottom)); display: none !important;
+        width: auto !important; min-width: 0; max-width: none; height: min(45dvh, 390px); min-height: 0; max-height: calc(100dvh - 154px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        margin: 0; border-radius: 14px; box-shadow: 0 -8px 32px rgba(0, 0, 0, .45);
+      }
+      body[data-mobile-panel="movements"] .arrivals-panel:not(.hidden),
+      body[data-mobile-panel="camera"] .airport-camera:not(.hidden),
+      body[data-mobile-panel="overview"] .airport-photo:not(.hidden) { display: flex !important; }
+      .mobile-sheet-header { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; color: #e0f2fe; }
+      .mobile-panel-close { display: block; min-width: 40px; min-height: 40px; padding: 0; font-size: 22px; }
+      .arrivals-header { align-items: center; padding: 5px 8px 5px 12px; }
+      .arrivals-header span { margin-left: auto; }
+      .traffic-tab { min-height: 42px; }
+      .traffic-legend { padding: 7px 10px; font-size: 10px; }
+      .schedule-source, .airport-photo figcaption { padding-left: 10px; }
+      .airport-camera-header { padding: 8px; }
+      .airport-camera-title { flex-basis: 60%; }
+      .airport-camera-close { order: 2; min-width: 40px; min-height: 40px; margin-left: auto; }
+      .airport-camera-source { order: 3; flex: 1; max-width: none; min-height: 36px; }
+      .airport-camera-header a { order: 4; padding: 8px; }
       .airport-camera-video-grid { grid-template-columns: 1fr; }
-      .right-rail { top: 178px; right: 8px; width: min(300px, calc(100vw - 16px)); }
-      .aircraft-photo img, .airport-photo img { aspect-ratio: 16 / 9; }
-      .arrivals-list, .schedule-list { max-height: 150px; }
-      .controls { right: 8px; bottom: 8px; }
+      .airport-camera-extra-feed { display: none; }
+      .controls { padding: 10px; overflow: auto; align-content: start; gap: 8px; color: #e0f2fe; background: #07111f; border: 1px solid #38bdf8; }
+      body[data-mobile-panel="settings"] .controls { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .controls .mobile-sheet-header { grid-column: 1 / -1; padding: 0 0 4px; }
+      .controls .control-field { flex-wrap: wrap; justify-content: space-between; min-width: 0; min-height: 44px; padding: 8px; }
+      .controls .control-field input[type="range"] { width: 100%; }
+      .controls button { min-height: 44px; }
+      .controls .mode-switch, .controls .cardinal-controls { grid-column: 1 / -1; justify-content: space-between; }
+      .controls .mode-switch button { flex: 1; }
+      .controls .desktop-only, .controls .camera-toggle { display: none; }
+      .mobile-nav { position: fixed; z-index: 12; inset: auto 0 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 7px 6px calc(7px + env(safe-area-inset-bottom)); background: rgba(4, 15, 27, .98); border-top: 1px solid #164e63; }
+      .mobile-nav button { display: grid; min-width: 0; min-height: 48px; place-items: center; gap: 3px; padding: 5px 1px; color: #94a3b8; background: transparent; border: 0; border-radius: 8px; font-size: 10px; }
+      .mobile-nav svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+      .mobile-nav button[aria-pressed="true"] { color: #7dd3fc; background: #0b3045; }
+      .mobile-nav button:disabled { opacity: .4; cursor: default; }
+      .diagnostics { left: 8px; bottom: calc(76px + env(safe-area-inset-bottom)); width: calc(100vw - 16px); max-height: 65dvh; }
+    }
+    @media (max-height: 500px) and (min-width: 500px) {
+      .airport-camera, .airport-photo, .arrivals-panel, .controls {
+        top: calc(68px + env(safe-area-inset-top)); left: auto;
+        width: min(44vw, 360px) !important; height: auto; max-height: none;
+      }
     }
   </style>
 </head>
-<body>
+<body data-mobile-panel="map">
   <div id="map" aria-label="Mapa tridimensional livre acompanhando a aeronave"></div>
   <header class="topbar">
     <div id="mode-eyebrow" class="eyebrow">VISAO DA CABINE 3D</div>
@@ -123,13 +180,16 @@
       <figcaption id="aircraft-photo-caption">Aeronave acompanhada</figcaption>
     </figure>
     <figure id="airport-photo" class="airport-photo hidden">
+      <div class="mobile-sheet-header"><strong>Visão do aeroporto</strong><button class="mobile-panel-close" type="button" data-close-mobile aria-label="Voltar ao mapa">×</button></div>
       <img id="airport-photo-image" alt="Foto do aeroporto selecionado">
       <figcaption id="airport-photo-caption">Visao do aeroporto</figcaption>
+      <button class="panel-resize" type="button" aria-label="Redimensionar visão do aeroporto" title="Arraste para redimensionar ou use as setas do teclado">⤢</button>
     </figure>
     <aside id="arrivals-panel" class="arrivals-panel hidden" aria-label="Movimentos do aeroporto">
       <div class="arrivals-header">
         <strong id="arrivals-title">MOVIMENTOS</strong>
         <span id="arrivals-count">carregando</span>
+        <button class="mobile-panel-close" type="button" data-close-mobile aria-label="Voltar ao mapa">×</button>
       </div>
       <div class="traffic-tabs" role="tablist" aria-label="Tipo de movimento">
         <button id="schedule-tab" class="traffic-tab" type="button" role="tab" aria-selected="true">PRÓXIMOS 30 MIN</button>
@@ -147,9 +207,11 @@
         <small class="schedule-source">Programação <a href="https://sas.anac.gov.br/sas/siros_api" target="_blank" rel="noopener">ANAC/SIROS</a> · horário de Brasília</small>
       </div>
       <div id="live-view" class="traffic-view hidden"><div id="arrivals-list" class="arrivals-list"></div></div>
+      <button class="panel-resize" type="button" aria-label="Redimensionar movimentos" title="Arraste para redimensionar ou use as setas do teclado">⤢</button>
     </aside>
   </div>
   <aside id="airport-camera" class="airport-camera hidden" aria-label="Camera ao vivo do aeroporto mais proximo">
+    <button class="panel-resize" type="button" aria-label="Redimensionar câmera" title="Arraste para redimensionar ou use as setas do teclado">⤢</button>
     <div class="airport-camera-header">
       <div class="airport-camera-title">
         <strong id="airport-camera-title">CAMERA AO VIVO</strong>
@@ -164,14 +226,15 @@
         <strong id="airport-camera-feed-title">CAMERA PRINCIPAL</strong>
         <iframe id="airport-camera-frame" title="Camera ao vivo do aeroporto" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
       </div>
-      <div id="airport-camera-extra-feed" class="airport-camera-feed hidden">
+      <div id="airport-camera-extra-feed" class="airport-camera-feed airport-camera-extra-feed hidden">
         <strong id="airport-camera-extra-title">CAMERA 2</strong>
         <iframe id="airport-camera-extra-frame" title="Segunda camera ao vivo do aeroporto" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
       </div>
     </div>
     <div id="airport-camera-note" class="airport-camera-note">Se aparecer “vídeo não disponível”, o YouTube bloqueou esta incorporação; escolha a outra fonte no seletor acima.</div>
   </aside>
-  <div class="controls">
+  <div id="map-controls" class="controls" aria-label="Ajustes do mapa">
+    <div class="mobile-sheet-header"><strong>Ajustes do mapa</strong><button class="mobile-panel-close" type="button" data-close-mobile aria-label="Voltar ao mapa">×</button></div>
     <label class="control-field" for="airport-select">Aeroporto
       <select id="airport-select">
         <option value="AUTO">Automatico</option>
@@ -194,11 +257,7 @@
       <input id="zoom-control" type="range" min="9" max="18" step="0.5">
       <output id="zoom-value" for="zoom-control"></output>
     </label>
-    <label class="control-field" for="panel-scale-control">Painel ao vivo
-      <input id="panel-scale-control" type="range" min="0.85" max="1.8" step="0.05">
-      <output id="panel-scale-value" for="panel-scale-control"></output>
-    </label>
-    <label class="control-field" for="camera-size-control">Video
+    <label class="control-field desktop-only" for="camera-size-control">Vídeo
       <input id="camera-size-control" type="range" min="300" max="900" step="20">
       <output id="camera-size-value" for="camera-size-control"></output>
     </label>
@@ -222,6 +281,13 @@
     <button id="show-diagnostics" type="button">Diagnostico</button>
     <button id="fullscreen" type="button">Tela cheia</button>
   </div>
+  <nav class="mobile-nav" aria-label="Painéis do AirViewer">
+    <button type="button" data-mobile-panel="map" aria-controls="map" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z M9 3v15 M15 6v15"/></svg>Mapa</button>
+    <button type="button" data-mobile-panel="movements" aria-controls="arrivals-panel" aria-pressed="false" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16 M4 12h16 M4 18h10"/></svg>Voos</button>
+    <button type="button" data-mobile-panel="camera" aria-controls="airport-camera" aria-pressed="false" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="m15 10 6-4v12l-6-4"/></svg>Câmera</button>
+    <button type="button" data-mobile-panel="overview" aria-controls="airport-photo" aria-pressed="false" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1"/></svg>Aeroporto</button>
+    <button type="button" data-mobile-panel="settings" aria-controls="map-controls" aria-pressed="false" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h5m4 0h7 M4 12h9m4 0h3 M4 18h2m4 0h10"/><circle cx="11" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></svg>Ajustes</button>
+  </nav>
   <section id="diagnostics" class="diagnostics hidden" aria-labelledby="diagnostics-title">
     <h2 id="diagnostics-title">Diagnostico do mapa 3D</h2>
     <pre id="diagnostics-text">Nenhuma falha registrada.</pre>
@@ -283,8 +349,10 @@
     let nightMode = isNightTime();
     let cameraZoom = readStoredNumber('aircraft-3d-zoom', 13, 9, 18);
     let panoramaZoom = readStoredNumber('aircraft-3d-panorama-zoom', 11.5, 9, 18);
-    let panelScale = readStoredNumber('aircraft-3d-panel-scale', 1.15, 0.85, 1.8);
+    const legacyPanelScale = readStoredNumber('aircraft-3d-panel-scale', 1.15, 0.85, 1.8);
     let cameraWidth = readStoredNumber('aircraft-3d-camera-width', 420, 300, 900);
+    const compactLayout = window.matchMedia('(max-width: 760px), (max-height: 600px)');
+    let mobilePanel = 'map';
     let selectedCameraSourceId = 'primary';
     let aircraftPhotoRequest = 0;
     const airportCenterZoom = 11.5;
@@ -324,7 +392,6 @@
     const aircraftViewSwitch = document.getElementById('aircraft-view-switch');
     const airportViewSwitch = document.getElementById('airport-view-switch');
     const cardinalValue = document.getElementById('cardinal-value');
-    const rightRail = document.querySelector('.right-rail');
     const arrivalsPanel = document.getElementById('arrivals-panel');
     const arrivalsTitle = document.getElementById('arrivals-title');
     const arrivalsCount = document.getElementById('arrivals-count');
@@ -335,10 +402,9 @@
     const liveView = document.getElementById('live-view');
     const scheduleTab = document.getElementById('schedule-tab');
     const liveTab = document.getElementById('live-tab');
-    const panelScaleControl = document.getElementById('panel-scale-control');
-    const panelScaleValue = document.getElementById('panel-scale-value');
     const cameraSizeControl = document.getElementById('camera-size-control');
     const cameraSizeValue = document.getElementById('camera-size-value');
+    const mobilePanelButtons = [...document.querySelectorAll('.mobile-nav button')];
     const airports = [
       { code: 'GIG', name: 'Galeao', lat: -22.8090, lon: -43.2506, elevationFeet: 28, radiusKm: 50, feedRadiusNm: 45, videoId: '', videoSearchUrl: 'https://www.youtube.com/results?search_query=GIG+Galeao+camera+ao+vivo' },
       { code: 'GRU', name: 'Guarulhos', lat: -23.4356, lon: -46.4731, elevationFeet: 2459, radiusKm: 45, feedRadiusNm: 45,
@@ -430,7 +496,7 @@
       airportPhotoCaption.textContent = airport
         ? `${airport.code} | Visao do aeroporto`
         : 'Visao do aeroporto';
-      if (!airportOverviewMode || !imageUrl) {
+      if (!airportOverviewMode || !imageUrl || (compactLayout.matches && mobilePanel !== 'overview')) {
         airportPhoto.classList.add('hidden');
         airportPhotoImage.removeAttribute('src');
         return;
@@ -503,14 +569,102 @@
       zoomValue.value = activeZoom.toFixed(1).replace('.0', '');
     }
 
-    function showPanelScaleValue() {
-      panelScaleValue.value = `${Math.round(panelScale * 100)}%`;
-      rightRail.style.transform = `scale(${panelScale})`;
-    }
-
     function showCameraSizeValue() {
       cameraSizeValue.value = `${Math.round(cameraWidth)} px`;
-      airportCamera.style.width = `${Math.round(cameraWidth)}px`;
+      airportCamera.style.setProperty('--panel-width', `${Math.round(cameraWidth)}px`);
+    }
+
+    function setMobilePanel(panel) {
+      mobilePanel = panel;
+      document.body.dataset.mobilePanel = panel;
+      for (const button of mobilePanelButtons) {
+        const selected = button.dataset.mobilePanel === panel;
+        button.setAttribute('aria-pressed', String(selected));
+        if (button.hasAttribute('aria-expanded')) button.setAttribute('aria-expanded', String(selected));
+      }
+      if (!compactLayout.matches) return;
+      if (panel === 'camera') {
+        showAirportCamera();
+      } else {
+        airportCamera.classList.add('hidden');
+        airportCameraFrame.removeAttribute('src');
+        airportCameraExtraFrame.removeAttribute('src');
+      }
+      if (panel === 'overview') {
+        if (!airportOverviewMode) setViewMode(true, true);
+        updateAirportPhoto();
+      }
+    }
+
+    function updateMobilePanelAvailability() {
+      const airport = activeAirportCamera;
+      for (const button of mobilePanelButtons) {
+        const panel = button.dataset.mobilePanel;
+        button.disabled = (panel === 'camera' && !getCameraSources(airport).length) ||
+          (panel === 'overview' && !airport?.photoUrl);
+        if (button.disabled && mobilePanel === panel) setMobilePanel('map');
+      }
+    }
+
+    function initPanelResize(panel, storageKey, width, height, minimumHeight) {
+      const handle = panel.querySelector('.panel-resize');
+      const widthDirection = panel === airportCamera ? 1 : -1;
+      const heightDirection = -widthDirection;
+      const minimumWidth = panel === airportCamera ? 300 : 260;
+      const savedWidth = readStoredNumber(`${storageKey}-width`, width, minimumWidth, 900);
+      const savedHeight = readStoredNumber(`${storageKey}-height`, height, minimumHeight, 900);
+      panel.style.setProperty('--panel-width', `${savedWidth}px`);
+      panel.style.setProperty('--panel-height', `${savedHeight}px`);
+      if (panel === airportCamera) {
+        cameraWidth = savedWidth;
+        cameraSizeControl.value = String(cameraWidth);
+        showCameraSizeValue();
+      }
+      let drag = null;
+      const applySize = (nextWidth, nextHeight) => {
+        const maxWidth = Math.min(900, window.innerWidth - (panel === airportCamera ? 32 : 116));
+        const maxHeight = Math.min(900, window.innerHeight - (panel === airportCamera ? 200 : 210));
+        panel.style.setProperty('--panel-width', `${Math.max(minimumWidth, Math.min(nextWidth, maxWidth))}px`);
+        panel.style.setProperty('--panel-height', `${Math.max(minimumHeight, Math.min(nextHeight, maxHeight))}px`);
+        if (panel === airportCamera) {
+          cameraWidth = panel.offsetWidth;
+          cameraSizeControl.value = String(cameraWidth);
+          showCameraSizeValue();
+        }
+      };
+      const saveSize = () => {
+        storeNumber(`${storageKey}-width`, panel.offsetWidth);
+        storeNumber(`${storageKey}-height`, panel.offsetHeight);
+      };
+      const finishDrag = event => {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        drag = null;
+        document.body.classList.remove('resizing-panel');
+        if (!compactLayout.matches) saveSize();
+      };
+      handle.addEventListener('pointerdown', event => {
+        if (compactLayout.matches || event.button !== 0) return;
+        event.preventDefault();
+        drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, width: panel.offsetWidth, height: panel.offsetHeight };
+        handle.setPointerCapture(event.pointerId);
+        document.body.classList.add('resizing-panel');
+      });
+      handle.addEventListener('pointermove', event => {
+        if (!drag || event.pointerId !== drag.pointerId) return;
+        applySize(drag.width + (event.clientX - drag.x) * widthDirection, drag.height + (event.clientY - drag.y) * heightDirection);
+      });
+      handle.addEventListener('pointerup', finishDrag);
+      handle.addEventListener('pointercancel', finishDrag);
+      handle.addEventListener('lostpointercapture', finishDrag);
+      handle.addEventListener('keydown', event => {
+        if (compactLayout.matches || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        const step = event.shiftKey ? 40 : 16;
+        const x = event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0;
+        const y = event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0;
+        applySize(panel.offsetWidth + x * widthDirection, panel.offsetHeight + y * heightDirection);
+        saveSize();
+      });
     }
 
     function updateTelemetry() {
@@ -764,6 +918,7 @@
         renderNearbyArrivals(airport, lastAirportTraffic, liveMessage);
         renderAirportSchedule(airport, lastScheduleFlights, scheduleMessage);
       }
+      if (compactLayout.matches) setMobilePanel('map');
     }
 
     function selectLiveMovement(aircraft, airport) {
@@ -1012,6 +1167,12 @@
         airportCameraSource.classList.add('hidden');
         return;
       }
+      if (compactLayout.matches && mobilePanel !== 'camera') {
+        airportCamera.classList.add('hidden');
+        airportCameraFrame.removeAttribute('src');
+        airportCameraExtraFrame.removeAttribute('src');
+        return;
+      }
       cameraDismissed = false;
       airportCamera.classList.remove('hidden');
       cameraToggle.classList.add('hidden');
@@ -1025,7 +1186,7 @@
         ? 'ARQUIVO: este vídeo é uma gravação e não representa uma transmissão ao vivo.'
         : 'AO VIVO: se o canal não estiver transmitindo publicamente agora, o YouTube mostrará “sem transmissão ao vivo agora”. Nenhuma gravação é usada como fallback.';
       const liveSources = getCameraSources(activeAirportCamera).filter(source => source.isLive);
-      const secondLiveSource = selectedSource?.isLive
+      const secondLiveSource = !compactLayout.matches && selectedSource?.isLive
         ? liveSources.find(source => source.id !== selectedSource.id)
         : null;
       const extraEmbedUrl = secondLiveSource ? cameraEmbedUrl(secondLiveSource) : '';
@@ -1096,6 +1257,7 @@
       updateViewModeButton();
       arrivalsPanel.classList.remove('hidden');
       arrivalsTitle.textContent = `MOVIMENTOS - ${activeAirportCamera.code}`;
+      updateMobilePanelAvailability();
       if (!getCameraSources(activeAirportCamera).length) {
         airportCamera.classList.add('hidden');
         cameraToggle.classList.add('hidden');
@@ -1778,6 +1940,9 @@
       cameraDismissed = true;
       airportCamera.classList.add('hidden');
       cameraToggle.classList.remove('hidden');
+      airportCameraFrame.removeAttribute('src');
+      airportCameraExtraFrame.removeAttribute('src');
+      if (compactLayout.matches) setMobilePanel('map');
     });
     cameraToggle.addEventListener('click', showAirportCamera);
     airportCameraSource.addEventListener('change', () => {
@@ -1804,11 +1969,6 @@
       refreshIntervalMs = Number(refreshInterval.value);
       storeNumber('aircraft-3d-refresh-ms', refreshIntervalMs);
       restartRefreshTimer();
-    });
-    panelScaleControl.addEventListener('input', () => {
-      panelScale = Number(panelScaleControl.value);
-      storeNumber('aircraft-3d-panel-scale', panelScale);
-      showPanelScaleValue();
     });
     cameraSizeControl.addEventListener('input', () => {
       cameraWidth = Number(cameraSizeControl.value);
@@ -1840,10 +2000,33 @@
 
     zoomControl.value = String(selectedAirportCode === 'AUTO' ? cameraZoom : panoramaZoom);
     showZoomValue();
-    panelScaleControl.value = String(panelScale);
-    showPanelScaleValue();
     cameraSizeControl.value = String(cameraWidth);
     showCameraSizeValue();
+    initPanelResize(airportCamera, 'aircraft-3d-camera', cameraWidth, 270, 180);
+    initPanelResize(airportPhoto, 'airviewer-airport-photo', 360 * legacyPanelScale, 250 * legacyPanelScale, 120);
+    initPanelResize(arrivalsPanel, 'airviewer-movements', 360 * legacyPanelScale, 290 * legacyPanelScale, 220);
+    for (const button of mobilePanelButtons) {
+      button.addEventListener('click', () => {
+        const panel = button.dataset.mobilePanel;
+        setMobilePanel(mobilePanel === panel ? 'map' : panel);
+      });
+    }
+    document.querySelectorAll('[data-close-mobile]').forEach(button => {
+      button.addEventListener('click', () => {
+        const trigger = mobilePanelButtons.find(item => item.dataset.mobilePanel === mobilePanel);
+        setMobilePanel('map');
+        trigger?.focus();
+      });
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && compactLayout.matches) setMobilePanel('map');
+    });
+    compactLayout.addEventListener('change', () => {
+      setMobilePanel('map');
+      updateViewSurfaces();
+      if (!compactLayout.matches && !cameraDismissed) showAirportCamera();
+      map?.resize();
+    });
     airportSelect.value = selectedAirportCode;
     refreshInterval.value = String(refreshIntervalMs);
     updateTelemetry();
