@@ -3,6 +3,8 @@ name: Deploy AirViewer web
 on:
   push:
     branches: [main, master]
+  schedule:
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -23,6 +25,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Build ANAC flight schedule
+        run: node scripts/update-schedule.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload static site
