@@ -141,6 +141,7 @@
         <span><i class="traffic-dot nearby"></i>Local</span>
         <span><i class="traffic-dot tracked"></i>Acompanhada</span>
       </div>
+      <small id="live-signal" class="schedule-source hidden" role="status"></small>
       <div id="schedule-view" class="traffic-view">
         <div id="schedule-list" class="schedule-list"></div>
         <small class="schedule-source">Programação <a href="https://sas.anac.gov.br/sas/siros_api" target="_blank" rel="noopener">ANAC/SIROS</a> · horário de Brasília</small>
@@ -271,6 +272,7 @@
     let scheduleMessage = 'Carregando';
     let airportOverviewMode = false;
     let lastAirportTraffic = [];
+    let lastAirportTrafficAt = 0;
     let airportTrafficStates = new Map();
     let airportTrafficAnimationFrame = null;
     let lastRegionalSnapshotKey = '';
@@ -326,6 +328,7 @@
     const arrivalsPanel = document.getElementById('arrivals-panel');
     const arrivalsTitle = document.getElementById('arrivals-title');
     const arrivalsCount = document.getElementById('arrivals-count');
+    const liveSignal = document.getElementById('live-signal');
     const arrivalsList = document.getElementById('arrivals-list');
     const scheduleList = document.getElementById('schedule-list');
     const scheduleView = document.getElementById('schedule-view');
@@ -550,9 +553,11 @@
       scheduleList.replaceChildren();
       lastScheduleFlights = [];
       liveMessage = 'Carregando';
+      liveSignal.classList.add('hidden');
       scheduleMessage = 'Carregando';
       updateMovementCount();
       lastAirportTraffic = [];
+      lastAirportTrafficAt = 0;
       lastRegionalSnapshotKey = '';
       airportTrafficStates.clear();
       if (airportTrafficAnimationFrame) {
@@ -572,10 +577,9 @@
 
     function renderNearbyArrivals(airport, arrivals, message = '') {
       lastAirportTraffic = arrivals;
-      liveMessage = message;
       arrivalsPanel.classList.remove('hidden');
       arrivalsTitle.textContent = `MOVIMENTOS - ${airport.code}`;
-      updateMovementCount();
+      setLiveMessage(message);
       arrivalsList.replaceChildren();
       if (!arrivals.length) {
         const empty = document.createElement('div');
@@ -600,6 +604,13 @@
         row.addEventListener('click', () => selectLiveMovement(arrival, airport));
         arrivalsList.appendChild(row);
       }
+    }
+
+    function setLiveMessage(message) {
+      liveMessage = message;
+      liveSignal.textContent = message;
+      liveSignal.classList.toggle('hidden', !message);
+      updateMovementCount();
     }
 
     function renderAirportSchedule(airport, flights, message = '') {
@@ -824,7 +835,7 @@
 
     async function fetchAdsb(path) {
       const response = await fetch(`https://proxy.cors.dev/https://api.adsb.lol/v2/${path}`, {
-        cache: 'no-store', signal: AbortSignal.timeout(10000)
+        cache: 'no-store', signal: AbortSignal.timeout(15000)
       });
       if (response.status === 429) {
         const now = Date.now();
@@ -840,9 +851,10 @@
     }
 
     async function refreshNearbyArrivals() {
-      if (!activeAirportCamera || !map || !map.getSource('airport-arrivals') || arrivalsFetchInProgress) return;
+      if (!activeAirportCamera || !map || !map.getSource('airport-arrivals')) return;
       const now = Date.now();
-      if (now < adsbRetryAt || now - lastArrivalsFetch < 15000) return;
+      if (lastAirportTrafficAt && now - lastAirportTrafficAt >= 60000) showAdsbInterruption(activeAirportCamera);
+      if (arrivalsFetchInProgress || now < adsbRetryAt || now - lastArrivalsFetch < 15000) return;
       arrivalsFetchInProgress = true;
       lastArrivalsFetch = now;
       const airport = { ...activeAirportCamera };
@@ -854,8 +866,9 @@
         const snapshotKey = `${airport.code}:${data.now || ''}:${data.total || 0}:${firstAircraft.hex || ''}:${firstAircraft.lat || ''}:${firstAircraft.lon || ''}`;
         if (snapshotKey === lastRegionalSnapshotKey) return;
         lastRegionalSnapshotKey = snapshotKey;
+        lastAirportTrafficAt = Date.now();
         document.documentElement.dataset.airportTrafficSnapshot = snapshotKey;
-        document.documentElement.dataset.airportTrafficReceivedAt = String(Date.now());
+        document.documentElement.dataset.airportTrafficReceivedAt = String(lastAirportTrafficAt);
         const traffic = data.ac.filter(item => item.hex && item.lat != null && item.lon != null && !(item.seen_pos > 60)).map(item => {
           const lat = Number(item.lat);
           const lon = Number(item.lon);
@@ -897,13 +910,22 @@
       } catch (error) {
         if (activeAirportCamera?.code !== airport.code) return;
         addDiagnostic('Tráfego ADS-B', error.message || String(error));
-        lastRegionalSnapshotKey = '';
-        airportTrafficStates.clear();
-        animateAirportTraffic([]);
-        renderNearbyArrivals(airport, [], 'Sinal ADS-B temporariamente indisponível.');
+        showAdsbInterruption(airport);
       } finally {
         arrivalsFetchInProgress = false;
       }
+    }
+
+    function showAdsbInterruption(airport) {
+      if (airportTrafficStates.size && Date.now() - lastAirportTrafficAt < 60000) {
+        setLiveMessage('ADS-B: últimas posições recebidas');
+        return;
+      }
+      lastRegionalSnapshotKey = '';
+      lastAirportTrafficAt = 0;
+      airportTrafficStates.clear();
+      animateAirportTraffic([]);
+      renderNearbyArrivals(airport, [], 'Sinal ADS-B temporariamente indisponível.');
     }
 
     function getCameraSources(camera) {
