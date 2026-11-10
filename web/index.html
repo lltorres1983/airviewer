@@ -123,7 +123,7 @@
       .mobile-menu button:hover { background: #10273b; }
       .mobile-empty { color: #bae6fd; font-size: 14px; line-height: 1.5; }
       .mobile-panel .airport-camera, .mobile-panel .telemetry, .mobile-panel .controls { position: static; width: 100% !important; min-width: 0; max-width: none; margin: 0; }
-      .right-rail { display: none; }
+      .right-rail, .telemetry { display: none; }
       .mobile-panel .airport-camera { border: 0; box-shadow: none; }
       .airport-camera-header { flex-wrap: wrap; padding: 0 0 12px; }
       .airport-camera-title { flex-basis: 100%; }
@@ -283,11 +283,9 @@
       <div id="mobile-menu" class="mobile-menu">
         <button type="button" data-mobile-view="camera">Câmera do aeroporto</button>
         <button type="button" data-mobile-view="flights">Próximos voos</button>
-        <button type="button" data-mobile-view="details">Detalhes e fotos</button>
       </div>
       <div id="mobile-camera" hidden><p class="mobile-empty" id="mobile-camera-empty">Não há câmera disponível para este aeroporto. Escolha outro em Opções.</p></div>
       <div id="mobile-flights" hidden><p class="mobile-empty" id="mobile-flights-empty">Selecione um aeroporto em Opções para consultar os próximos voos.</p></div>
-      <div id="mobile-details" hidden></div>
       <div id="mobile-options" hidden></div>
     </div>
   </section>
@@ -410,12 +408,11 @@
     const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
     const mobileMap = document.getElementById('mobile-map');
     let mobileView = 'map';
-    const mobileSections = ['camera', 'flights', 'details', 'options'];
-    const mobileTitles = { menu: 'Menu', camera: 'Câmera', flights: 'Próximos voos', details: 'Detalhes e fotos', options: 'Opções' };
+    const mobileSections = ['camera', 'flights', 'options'];
+    const mobileTitles = { menu: 'Menu', camera: 'Câmera', flights: 'Próximos voos', options: 'Opções' };
     const mobileDestinations = [
       [airportCamera, 'camera'], [arrivalsPanel, 'flights'],
-      [document.getElementById('telemetry'), 'details'], [aircraftPhoto, 'details'],
-      [airportPhoto, 'details'], [document.querySelector('.controls'), 'options']
+      [document.querySelector('.controls'), 'options']
     ].map(([element, section]) => {
       const placeholder = document.createComment('Posição no desktop');
       element.before(placeholder);
