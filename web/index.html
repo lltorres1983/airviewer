@@ -267,7 +267,7 @@
     let airportTrafficStates = new Map();
     let airportTrafficAnimationFrame = null;
     let lastRegionalSnapshotKey = '';
-    let selectedAirportCode = 'AUTO';
+    let selectedAirportCode = 'GRU';
     let selectedMovementFlight = '';
     let manualMapBearing = null;
     let pendingFlightSelection = null;
@@ -364,8 +364,6 @@
       ]
     };
     try {
-      const storedAirport = localStorage.getItem('aircraft-3d-airport');
-      if (storedAirport && ['AUTO', 'GIG', 'GRU', 'SDU'].includes(storedAirport)) selectedAirportCode = storedAirport;
     } catch (_) {}
     const routeElement = document.getElementById('route');
     routeElement.textContent = routeLabel || 'ROTA NAO CONFIRMADA';
@@ -617,7 +615,7 @@
       if (!flights.length) {
         const empty = document.createElement('div');
         empty.className = 'arrivals-empty';
-        empty.textContent = errorMessage ? 'Agenda temporariamente indisponivel.' : 'Nenhum movimento programado nos proximos 30 minutos.';
+        empty.textContent = errorMessage ? 'Agenda temporariamente indisponivel.' : 'Nenhuma estimativa ADS-B para os próximos 30 minutos.';
         scheduleList.appendChild(empty);
         return;
       }
@@ -841,12 +839,12 @@
       const airport = { ...activeAirportCamera };
       try {
         const flights = buildBrowserSchedule(airport);
-        renderAirportSchedule(airport, flights, flights.length ? '' : 'sem estimativas ADS-B');
+        renderAirportSchedule(airport, flights, '');
       } catch (error) {
         if (activeAirportCamera && activeAirportCamera.code === airport.code) {
           renderAirportSchedule(airport, [], 'agenda indisponivel');
         }
-        addDiagnostic('Agenda FlightStats', error.message || String(error));
+        addDiagnostic('Estimativas ADS-B', error.message || String(error));
       } finally {
         scheduleFetchInProgress = false;
       }
@@ -1804,7 +1802,6 @@
     });
     airportSelect.addEventListener('change', () => {
       selectedAirportCode = airportSelect.value;
-      try { localStorage.setItem('aircraft-3d-airport', selectedAirportCode); } catch (_) {}
       clearNearbyArrivals();
       activeAirportCamera = null;
       cameraDismissed = false;
