@@ -226,7 +226,6 @@
   (() => {
     const pageQuery = new URLSearchParams(window.location.search);
     const aircraftHex = pageQuery.get('hex') || '';
-    const startInAircraftView = pageQuery.get('view') === 'aircraft' || Boolean(aircraftHex);
     let trackedAircraftHex = aircraftHex;
     const routeLabel = pageQuery.get('route') || '';
     const initialAircraftName = pageQuery.get('name') || '';
@@ -483,24 +482,6 @@
       showZoomValue();
       status.textContent = `Visao panoramica - ${airportCode}`;
       updateViewModeButton();
-    }
-
-    function restoreAutomaticTracking() {
-      trackedAircraftHex = aircraftHex;
-      selectedMovementFlight = '';
-      pendingFlightSelection = null;
-      airportOverviewMode = false;
-      routeElement.textContent = routeLabel || 'ROTA NAO CONFIRMADA';
-      modeEyebrow.textContent = 'VISAO DA CABINE 3D';
-      document.getElementById('telemetry').classList.remove('hidden');
-      if (trackedMarkerElement) trackedMarkerElement.style.display = 'grid';
-      if (initialAircraftImage) aircraftPhoto.classList.remove('hidden');
-      zoomControl.value = String(cameraZoom);
-      showZoomValue();
-      updateAircraftIdentity(null);
-      updateTelemetry();
-      updateViewModeButton();
-      if (trackedAircraftHex) void refresh();
     }
 
     function showZoomValue() {
@@ -1053,8 +1034,8 @@
         ? { ...manuallySelected, distance: distanceKm(current.lat, current.lon, manuallySelected.lat, manuallySelected.lon) }
         : airports
           .map(airport => ({ ...airport, distance: distanceKm(current.lat, current.lon, airport.lat, airport.lon) }))
-          .filter(airport => airport.distance <= airport.radiusKm)
-          .sort((left, right) => left.distance - right.distance)[0];
+          .filter(airport => airport.distance <= airport.radiusKm || airport.code === 'GRU')
+          .sort((left, right) => Number(right.distance <= right.radiusKm) - Number(left.distance <= left.radiusKm) || left.distance - right.distance)[0];
 
       if (!nearbyCamera) {
         activeAirportCamera = null;
@@ -1074,7 +1055,7 @@
       const cameraChanged = !activeAirportCamera || activeAirportCamera.code !== nearbyCamera.code;
       if (cameraChanged) {
         activeAirportCamera = nearbyCamera;
-        airportOverviewMode = !trackedAircraftHex && !startInAircraftView;
+        airportOverviewMode = !trackedAircraftHex;
         cameraDismissed = false;
         previousArrivalDistances.clear();
         airportCameraFrame.removeAttribute('src');
@@ -1808,14 +1789,15 @@
       airportCameraFrame.removeAttribute('src');
       lastArrivalsFetch = 0;
       lastScheduleFetch = 0;
-      if (selectedAirportCode === 'AUTO') restoreAutomaticTracking();
+      if (selectedAirportCode === 'AUTO') {
+        updateAirportCamera();
+        enterAirportPanorama(activeAirportCamera.code);
+      }
       else enterAirportPanorama(selectedAirportCode);
       updateAirportCamera();
       updateViewModeButton();
       recenter(true);
-      if (selectedAirportCode !== 'AUTO') {
-        requestAnimationFrame(() => fitAirportTraffic(true));
-      }
+      requestAnimationFrame(() => fitAirportTraffic(true));
     });
     document.getElementById('show-diagnostics').addEventListener('click', () => document.getElementById('diagnostics').classList.remove('hidden'));
     document.getElementById('close-diagnostics').addEventListener('click', () => document.getElementById('diagnostics').classList.add('hidden'));
