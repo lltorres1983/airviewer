@@ -20,7 +20,6 @@ export interface Airport {
   radiusKm: number;
   feedRadiusNm: number;
   distance?: number;
-  photoUrl?: string;
   videoId?: string;
   videoLabel?: string;
   videoSearchUrl?: string;

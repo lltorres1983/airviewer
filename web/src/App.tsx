@@ -40,12 +40,9 @@ export default function App() {
         Carregando mapa 3D livre...
       </div>
       <div className="right-rail">
-        <AircraftDetails />
-        <figure id="airport-photo" className="airport-photo hidden">
-        <button className="panel-resize" type="button" aria-label="Redimensionar visão do aeroporto" title="Arraste para redimensionar ou use as setas do teclado">⤢</button>
-          <img id="airport-photo-image" alt="Foto do aeroporto selecionado" />
-          <figcaption id="airport-photo-caption">Visao do aeroporto</figcaption>
-        </figure>
+        <div className="aircraft-details-slot">
+          <AircraftDetails />
+        </div>
         <aside
           id="arrivals-panel"
           className="arrivals-panel hidden"

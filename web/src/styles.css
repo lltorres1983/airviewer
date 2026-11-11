@@ -87,8 +87,7 @@ body,
 .airport-camera.hidden,
 .airport-camera-source.hidden,
 .camera-toggle.hidden,
-.view-mode.hidden,
-.airport-photo.hidden {
+.view-mode.hidden {
   display: none;
 }
 .airport-camera-header {
@@ -197,7 +196,6 @@ body,
   transform-origin: top right;
 }
 .aircraft-photo,
-.airport-photo,
 .arrivals-panel {
   margin: 0;
   overflow: hidden;
@@ -219,23 +217,7 @@ body,
   object-fit: cover;
   background: #0f172a;
 }
-.airport-photo img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-  background: #0f172a;
-}
 .aircraft-photo figcaption {
-  padding: 7px 10px;
-  overflow: hidden;
-  color: #bae6fd;
-  font-size: 11px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.airport-photo figcaption {
   padding: 7px 10px;
   overflow: hidden;
   color: #bae6fd;
@@ -823,8 +805,7 @@ a:focus-visible {
   .mobile-panel figure {
     margin-bottom: 16px;
   }
-  .aircraft-photo img,
-  .airport-photo img {
+  .aircraft-photo img {
     aspect-ratio: 16 / 9;
   }
   label:has(#panel-scale-control),
@@ -928,9 +909,6 @@ button {
 }
 .right-rail:has(.aircraft-details) > * {
   flex-shrink: 0;
-}
-.right-rail:has(.aircraft-details) .airport-photo {
-  display: none;
 }
 .aircraft-details {
   color: var(--foreground);
@@ -1074,7 +1052,7 @@ button {
     max-height: min(58dvh, calc(100dvh - 170px));
     transform: none !important;
   }
-  .right-rail:has(.aircraft-details) > :not(.aircraft-details) {
+  .right-rail:has(.aircraft-details) > :not(.aircraft-details-slot) {
     display: none;
   }
   #root:has(#mobile-panel:not([hidden])) .right-rail {
@@ -1241,11 +1219,8 @@ button {
 .airport-camera-feed { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: #000; }
 .airport-camera-note { flex-shrink: 0; max-height: 70px; overflow: auto; padding: 6px 9px; color: #bae6fd; background: #0b2034; border-top: 1px solid rgba(56, 189, 248, .32); font-size: 10px; line-height: 1.35; }
 .right-rail { position: fixed; z-index: 8; top: 92px; right: 58px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; width: max-content; max-width: calc(100vw - 116px); max-height: calc(100dvh - 210px); pointer-events: none; }
-.airport-photo img { display: block; flex: 1; min-height: 0; width: 100%; object-fit: contain; background: #0f172a; }
-.airport-photo figcaption { flex-shrink: 0; padding: 7px 10px 7px 30px; overflow: hidden; color: #bae6fd; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .schedule-source { display: block; flex-shrink: 0; padding: 6px 10px 6px 30px; color: #cbd5e1; font-size: 10px; }
 .arrivals-list, .schedule-list { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
-.airport-photo { position: relative; display: flex; flex-direction: column; width: var(--panel-width, 414px); height: var(--panel-height, 280px); max-width: calc(100vw - 116px); min-height: 120px; }
 .arrivals-panel { position: relative; display: flex; flex-direction: column; width: var(--panel-width, 414px); height: var(--panel-height, 330px); max-width: calc(100vw - 116px); min-height: 220px; }
 .arrivals-panel > :not(.traffic-view) { flex-shrink: 0; }
 .traffic-view { display: flex; flex: 1; flex-direction: column; min-height: 0; }
@@ -1305,3 +1280,7 @@ label:has(#camera-size-control), #camera-toggle { display: none !important; }
   outline: 2px solid #4285f4;
   outline-offset: 3px;
 }
+
+/* Stable React insertion point beside panels moved by the mobile controller. */
+.aircraft-details-slot { display: contents; }
+.aircraft-details { flex-shrink: 0; }

@@ -5,9 +5,6 @@ interface Elements {
   "aircraft-identity": HTMLDivElement;
   telemetry: HTMLDivElement;
   status: HTMLDivElement;
-  "airport-photo": HTMLElement;
-  "airport-photo-image": HTMLImageElement;
-  "airport-photo-caption": HTMLElement;
   "arrivals-panel": HTMLElement;
   "arrivals-title": HTMLElement;
   "arrivals-count": HTMLElement;

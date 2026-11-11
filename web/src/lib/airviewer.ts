@@ -138,9 +138,6 @@ export function startAirviewer() {
   const airportCameraNote = element("airport-camera-note");
   const cameraToggle = element("camera-toggle");
   const viewModeButton = element("view-mode");
-  const airportPhoto = element("airport-photo");
-  const airportPhotoImage = element("airport-photo-image");
-  const airportPhotoCaption = element("airport-photo-caption");
   const aircraftViewSwitch = element("aircraft-view-switch");
   const airportViewSwitch = element("airport-view-switch");
   const cardinalValue = element("cardinal-value");
@@ -333,7 +330,6 @@ export function startAirviewer() {
         },
       ],
       videoSearchUrl: "https://www.youtube.com/@SBGRLIVE/live",
-      photoUrl: "https://img.youtube.com/vi/4dSeSUxsDio/hqdefault.jpg",
     },
     {
       code: "SDU",
@@ -486,30 +482,6 @@ export function startAirviewer() {
     const type = liveType || initialAircraftType;
     const identity = type ? `${name} | ${type}` : name;
     element("aircraft-identity").textContent = identity;
-  }
-
-  function updateAirportPhoto() {
-    const airport =
-      activeAirportCamera ||
-      airports.find((item) => item.code === selectedAirportCode);
-    const imageUrl = airport?.photoUrl || "";
-    airportPhotoCaption.textContent = airport
-      ? `${airport.code} | Visao do aeroporto`
-      : "Visao do aeroporto";
-    if (!airportOverviewMode || !imageUrl) {
-      airportPhoto.classList.add("hidden");
-      airportPhotoImage.removeAttribute("src");
-      return;
-    }
-    airportPhotoImage.onload = () => airportPhoto.classList.remove("hidden");
-    airportPhotoImage.onerror = () => airportPhoto.classList.add("hidden");
-    if (airportPhotoImage.getAttribute("src") !== imageUrl)
-      airportPhotoImage.src = imageUrl;
-    else airportPhoto.classList.remove("hidden");
-  }
-
-  function updateViewSurfaces() {
-    updateAirportPhoto();
   }
 
   function readStoredNumber(
@@ -1638,7 +1610,6 @@ export function startAirviewer() {
       "is-active",
       airportOverviewMode && Boolean(activeAirportCamera),
     );
-    updateViewSurfaces();
     if (!aircraft3dEnabled || !activeAirportCamera || !trackedAircraftHex) {
       viewModeButton.classList.add("hidden");
       return;
@@ -2602,7 +2573,6 @@ export function startAirviewer() {
   cameraSizeControl.value = String(cameraWidth);
   showCameraSizeValue();
   initPanelResize(airportCamera, 'aircraft-3d-camera', cameraWidth, 270, 180);
-  initPanelResize(airportPhoto, 'airviewer-airport-photo', 360 * legacyPanelScale, 250 * legacyPanelScale, 120);
   initPanelResize(arrivalsPanel, 'airviewer-movements', 360 * legacyPanelScale, 290 * legacyPanelScale, 220);
   airportSelect.value = selectedAirportCode;
   refreshInterval.value = String(refreshIntervalMs);
@@ -2707,8 +2677,6 @@ export function startAirviewer() {
     mobileObserver.disconnect();
     controlsObserver.disconnect();
     document.documentElement.style.removeProperty("--controls-height");
-    airportPhotoImage.onload = null;
-    airportPhotoImage.onerror = null;
     airportCameraFrame.removeAttribute("src");
     airportCameraExtraFrame.removeAttribute("src");
     mobileDestinations.forEach(({ element: node, placeholder }) => {
