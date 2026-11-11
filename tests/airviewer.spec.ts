@@ -95,3 +95,27 @@ test("falhas nas APIs exibem estado de indisponibilidade", async ({ page }) => {
     "Sinal ADS-B temporariamente indisponível",
   );
 });
+
+test("redimensiona painéis e preserva o tamanho após recarregar", async ({ page }) => {
+  await fixtures(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+  const panel = page.locator("#arrivals-panel");
+  const handle = page.getByRole("button", { name: "Redimensionar movimentos", exact: true });
+  await expect(handle).toBeVisible();
+  const initial = (await panel.boundingBox())!;
+  await handle.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width)).toBe(Math.round(initial.width) + 16);
+  await page.reload();
+  await expect(panel).toBeVisible();
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width)).toBe(Math.round(initial.width) + 16);
+  const grip = (await handle.boundingBox())!;
+  const before = (await panel.boundingBox())!;
+  await page.mouse.move(grip.x + 12, grip.y + 12);
+  await page.mouse.down();
+  await page.mouse.move(grip.x - 28, grip.y + 32);
+  await page.mouse.up();
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width)).toBe(Math.round(before.width) + 40);
+  await expect(page.locator("body")).not.toHaveClass(/resizing-panel/);
+});
