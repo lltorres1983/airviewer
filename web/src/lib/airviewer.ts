@@ -722,7 +722,7 @@ export function startAirviewer() {
       row.append(name, distance, detail);
       row.addEventListener(
         "click",
-        () => selectLiveMovement(arrival, airport),
+        () => selectLiveMovement(arrival, airport, true),
         { signal: lifecycle.signal },
       );
       arrivalsList.appendChild(row);
@@ -935,12 +935,25 @@ export function startAirviewer() {
     }
   }
 
-  function selectLiveMovement(aircraft: TrafficAircraft, airport: Airport) {
+  function centerSelectedAircraft() {
+    if (!map || !trackedAircraftHex) return;
+    map.stop();
+    map.easeTo({
+      center: [current.lon, current.lat],
+      duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700,
+    });
+  }
+
+  function selectLiveMovement(aircraft: TrafficAircraft, airport: Airport, centerMap = false) {
     followTrafficAircraft(aircraft, airport, trafficRoute(aircraft));
+    if (centerMap) centerSelectedAircraft();
   }
 
   function selectScheduledMovement(flight: ScheduledFlight, airport: Airport) {
     selectAircraft(null);
+    trackedAircraftHex = "";
+    if (trackedMarkerElement) trackedMarkerElement.style.display = "none";
+    element("telemetry").classList.add("hidden");
     selectedMovementFlight = flight.flight;
     const selectedRoute = movementRoute(flight, airport);
     routeElement.textContent = selectedRoute;
@@ -958,6 +971,7 @@ export function startAirviewer() {
         selectedRoute,
         flight.flight,
       );
+      centerSelectedAircraft();
     } else {
       status.textContent = `${flight.flight} selecionado | aguardando posicao ADS-B`;
     }
@@ -1211,13 +1225,15 @@ export function startAirviewer() {
         const liveAircraft = findLiveTrafficForFlight(
           pendingFlightSelection.flight,
         );
-        if (liveAircraft)
+        if (liveAircraft) {
           followTrafficAircraft(
             liveAircraft,
             airport,
             pendingFlightSelection.route,
             pendingFlightSelection.flight,
           );
+          centerSelectedAircraft();
+        }
       }
     } catch (error) {
       if (lifecycle.signal.aborted) return;
@@ -2616,11 +2632,7 @@ export function startAirviewer() {
         movement: "nearby",
       };
       followTrafficAircraft(aircraft, airport, trafficRoute(aircraft));
-      map.stop();
-      map.easeTo({
-        center: [lon, lat],
-        duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700,
-      });
+      centerSelectedAircraft();
     } catch {
       if (
         !lifecycle.signal.aborted &&

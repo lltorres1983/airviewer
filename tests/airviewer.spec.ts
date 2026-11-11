@@ -119,3 +119,27 @@ test("redimensiona painéis e preserva o tamanho após recarregar", async ({ pag
   await expect.poll(async () => Math.round((await panel.boundingBox())!.width)).toBe(Math.round(before.width) + 40);
   await expect(page.locator("body")).not.toHaveClass(/resizing-panel/);
 });
+
+for (const tab of ['schedule', 'live']) {
+  test(`movimentos ${tab} seleciona e centraliza a aeronave sem alterar zoom ou orientação`, async ({page}) => {
+    await fixtures(page, [{hex:'abc123', flight:'TAM1234', r:'PT-ABC', t:'A320',
+      lat:-23.4, lon:-46.3, alt_baro:5000, track:120, baro_rate:-500, gs:180, seen_pos:1}]);
+    await page.setViewportSize({width:1440,height:1000});
+    await page.goto('/');
+    await expect.poll(() => page.locator('html').getAttribute('data-airport-traffic-received-at')).not.toBeNull();
+    await page.getByRole('button',{name:'Leste',exact:true}).click();
+    const zoom = await page.locator('#zoom-control').inputValue();
+    if(tab === 'live') await page.locator('#live-tab').click();
+    await page.locator(tab === 'live' ? '.arrival-row' : '.schedule-row').click();
+    await expect(page.locator('.aircraft-details-header')).toContainText('PT-ABC');
+    await expect(async () => {
+      const marker = (await page.locator('.aircraft-marker').boundingBox())!;
+      const map = (await page.locator('.maplibregl-canvas').boundingBox())!;
+      expect(marker).not.toBeNull();
+      expect(Math.abs(marker.x + marker.width / 2 - (map.x + map.width / 2))).toBeLessThan(3);
+      expect(Math.abs(marker.y + marker.height / 2 - (map.y + map.height / 2))).toBeLessThan(3);
+    }).toPass({timeout:10000});
+    await expect(page.locator('#zoom-control')).toHaveValue(zoom);
+    await expect(page.locator('#cardinal-value')).toHaveText('L 090°');
+  });
+}
