@@ -299,3 +299,38 @@ test("cancelamento do Google informa falha sem expor o texto recebido", async ({
   await expect(page.getByRole("dialog")).not.toContainText("untrusted-message");
   await expect(page).not.toHaveURL(/error=/);
 });
+
+test("abrir favorito distante centraliza o mapa na posição atual do avião", async ({ page }) => {
+  await mockBackend(page, [favorite]);
+  await seedSession(page);
+  await page.route('**/v2/hex/abc123', route => route.fulfill({json:{ac:[{
+    hex:'abc123', r:'PT-ABC', t:'A320', flight:'TAM1234',
+    lat:-22.9, lon:-43.2, alt_baro:10000, track:90, seen_pos:1,
+  }]}}));
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto('/');
+  await expect.poll(() => page.locator('html').getAttribute('data-airport-traffic-received-at')).not.toBeNull();
+  await page.getByRole('button',{name:'Conta e favoritos',exact:true}).click();
+  await page.getByRole('button',{name:'Abrir aeronave PT-ABC'}).click();
+  await expect(page.locator('#status')).toContainText('Acompanhando');
+  await expect(async () => {
+    const marker = await page.locator('.aircraft-marker').boundingBox();
+    const canvas = await page.locator('.maplibregl-canvas').boundingBox();
+    expect(marker).not.toBeNull();expect(canvas).not.toBeNull();
+    expect(Math.abs(marker!.x + marker!.width / 2 - (canvas!.x + canvas!.width / 2))).toBeLessThan(3);
+    expect(Math.abs(marker!.y + marker!.height / 2 - (canvas!.y + canvas!.height / 2))).toBeLessThan(3);
+  }).toPass({timeout:10000});
+});
+
+test("favorito sem sinal atual informa indisponibilidade sem mostrar posição antiga", async ({ page }) => {
+  await mockBackend(page, [favorite]);
+  await seedSession(page);
+  await page.route('**/v2/hex/abc123', route => route.fulfill({json:{ac:[{
+    hex:'abc123', lat:-22.9, lon:-43.2, seen_pos:120,
+  }]}}));
+  await page.goto('/');
+  await page.getByRole('button',{name:'Conta e favoritos',exact:true}).click();
+  await page.getByRole('button',{name:'Abrir aeronave PT-ABC'}).click();
+  await expect(page.locator('#status')).toContainText('posição ao vivo indisponível');
+  await expect(page.locator('.aircraft-marker')).toBeHidden();
+});

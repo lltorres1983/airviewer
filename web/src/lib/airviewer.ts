@@ -1671,6 +1671,9 @@ export function startAirviewer() {
   }
 
   function updateTrail() {
+    marker?.setLngLat([current.lon, current.lat]);
+    marker?.setRotation(Number(current.track || 0));
+    updateTrackedVerticalIndicator();
     if (!map || !map.getSource("aircraft-trail")) return;
     map.getSource<maplibregl.GeoJSONSource>("aircraft-trail")!.setData({
       type: "Feature",
@@ -2586,7 +2589,10 @@ export function startAirviewer() {
       const airport = activeAirportCamera;
       const lat = Number(raw.lat),
         lon = Number(raw.lon);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+        status.textContent = "Favorito selecionado | posição ao vivo indisponível";
+        return;
+      }
       const altitude = Number(
         raw.alt_baro === "ground"
           ? airport.elevationFeet
@@ -2610,6 +2616,11 @@ export function startAirviewer() {
         movement: "nearby",
       };
       followTrafficAircraft(aircraft, airport, trafficRoute(aircraft));
+      map.stop();
+      map.easeTo({
+        center: [lon, lat],
+        duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700,
+      });
     } catch {
       if (
         !lifecycle.signal.aborted &&
