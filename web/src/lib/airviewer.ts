@@ -19,6 +19,7 @@ import {
   subscribeSavedAircraft,
 } from "./aircraft-selection";
 import { fetchFlightRoute } from "./aircraft-data";
+import { aircraftIconKind, aircraftIconKinds, createAircraftMapIcon, createAircraftMarkerDataUrl } from "./aircraft-icons";
 
 maplibregl.setWorkerUrl(workerUrl);
 
@@ -60,6 +61,7 @@ export function startAirviewer() {
   };
   let map: maplibregl.Map;
   let marker: maplibregl.Marker | null = null;
+  let currentAircraftType = initialAircraftType;
   let trackedMarkerElement: HTMLDivElement | null = null;
   let refreshTimer: ReturnType<typeof setInterval> | undefined;
   let airportTrafficTimer: ReturnType<typeof setInterval> | undefined;
@@ -480,6 +482,8 @@ export function startAirviewer() {
       trackedAircraftHex.toUpperCase() ||
       "AERONAVE NAO IDENTIFICADA";
     const type = liveType || initialAircraftType;
+    currentAircraftType = type;
+    updateTrackedIcon();
     const identity = type ? `${name} | ${type}` : name;
     element("aircraft-identity").textContent = identity;
   }
@@ -1750,7 +1754,7 @@ export function startAirviewer() {
             state.hex === String(trackedAircraftHex || "").toLowerCase(),
           track: position.track,
           scale: aircraftIconScale(state.type),
-          icon: `${movement === "overflight" ? "nearby" : movement}-aircraft`,
+          icon: `${movement === "overflight" ? "nearby" : movement}-${aircraftIconKind(state.type)}`,
           verticalIndicator: vertical.symbol,
           verticalTrend: vertical.trend,
         },
@@ -1813,49 +1817,15 @@ export function startAirviewer() {
     renderAirportTrafficFrame(timestamp);
   }
 
-  function createAircraftMapIcon(color: string, strokeColor: string) {
-    const canvas = document.createElement("canvas");
-    canvas.width = 56;
-    canvas.height = 56;
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("Canvas 2D indisponível");
-    context.translate(28, 28);
-    context.beginPath();
-    context.moveTo(0, -24);
-    context.bezierCurveTo(4, -21, 5, -12, 5, -5);
-    context.lineTo(23, 5);
-    context.lineTo(23, 10);
-    context.lineTo(5, 5);
-    context.lineTo(4, 16);
-    context.lineTo(11, 21);
-    context.lineTo(11, 24);
-    context.lineTo(0, 20);
-    context.lineTo(-11, 24);
-    context.lineTo(-11, 21);
-    context.lineTo(-4, 16);
-    context.lineTo(-5, 5);
-    context.lineTo(-23, 10);
-    context.lineTo(-23, 5);
-    context.lineTo(-5, -5);
-    context.bezierCurveTo(-5, -12, -4, -21, 0, -24);
-    context.closePath();
-    context.fillStyle = color;
-    context.strokeStyle = strokeColor;
-    context.lineWidth = 4;
-    context.lineJoin = "round";
-    context.fill();
-    context.stroke();
-    return context.getImageData(0, 0, 56, 56);
-  }
-
-  function createAircraftMarkerDataUrl(color: string, strokeColor: string) {
-    const canvas = document.createElement("canvas");
-    canvas.width = 56;
-    canvas.height = 56;
-    canvas
-      .getContext("2d")!
-      .putImageData(createAircraftMapIcon(color, strokeColor), 0, 0);
-    return canvas.toDataURL("image/png");
+  function updateTrackedIcon() {
+    const icon = trackedMarkerElement?.querySelector<HTMLElement>(".aircraft-symbol");
+    if (!icon || !trackedMarkerElement) return;
+    const kind = aircraftIconKind(currentAircraftType);
+    const key = `${kind}-${nightMode}`;
+    if (icon.dataset.iconKey === key) return;
+    icon.style.backgroundImage = `url("${createAircraftMarkerDataUrl(nightMode ? "#fbbf24" : "#ff5a00", nightMode ? "#ffffff" : "#07111f", kind)}")`;
+    icon.dataset.iconKey = key;
+    trackedMarkerElement.dataset.aircraftKind = kind;
   }
 
   function initMap() {
@@ -2138,30 +2108,15 @@ export function startAirviewer() {
             '<a href="https://www.adsb.lol/" target="_blank" rel="noopener">Posições adsb.lol</a> (<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL</a>)',
         });
         const aircraftStroke = nightMode ? "#ffffff" : "#07111f";
-        map.addImage(
-          "arrival-aircraft",
-          createAircraftMapIcon(
-            nightMode ? "#fbbf24" : "#ff5a00",
-            aircraftStroke,
-          ),
-          { pixelRatio: 2 },
-        );
-        map.addImage(
-          "departure-aircraft",
-          createAircraftMapIcon(
-            nightMode ? "#38bdf8" : "#008cff",
-            aircraftStroke,
-          ),
-          { pixelRatio: 2 },
-        );
-        map.addImage(
-          "nearby-aircraft",
-          createAircraftMapIcon(
-            nightMode ? "#f8fafc" : "#e11d48",
-            aircraftStroke,
-          ),
-          { pixelRatio: 2 },
-        );
+        for (const kind of aircraftIconKinds) {
+          for (const [movement, color] of [
+            ["arrival", nightMode ? "#fbbf24" : "#ff5a00"],
+            ["departure", nightMode ? "#38bdf8" : "#008cff"],
+            ["nearby", nightMode ? "#f8fafc" : "#e11d48"],
+          ]) {
+            map.addImage(`${movement}-${kind}`, createAircraftMapIcon(color, aircraftStroke, kind), { pixelRatio: 2 });
+          }
+        }
         map.addLayer({
           id: "airport-arrivals-points",
           type: "symbol",
@@ -2297,7 +2252,6 @@ export function startAirviewer() {
         );
         const markerIcon = document.createElement("span");
         markerIcon.className = "aircraft-symbol";
-        markerIcon.style.backgroundImage = `url("${createAircraftMarkerDataUrl(nightMode ? "#fbbf24" : "#ff5a00", nightMode ? "#ffffff" : "#07111f")}")`;
         const markerVerticalArrow = document.createElement("span");
         markerVerticalArrow.className = "vertical-arrow";
         trackedMarkerElement.append(markerIcon, markerVerticalArrow);
@@ -2310,6 +2264,7 @@ export function startAirviewer() {
           .setLngLat([current.lon, current.lat])
           .addTo(map);
       }
+      updateTrackedIcon();
       trackedMarkerElement!.style.display = trackedAircraftHex
         ? "grid"
         : "none";
