@@ -146,10 +146,13 @@ export function AccountPanel() {
                 </p>
                 <Button
                   type="button"
+                  className="google-signin-button"
+                  aria-busy={account.authBusy}
                   disabled={account.authBusy}
                   onClick={() => void account.signIn()}
                 >
-                  {account.authBusy ? "Conectando…" : "Entrar com Google"}
+                  <img src={`${import.meta.env.BASE_URL}assets/google-g.png`} width="20" height="20" alt="" aria-hidden="true" />
+                  <span>{account.authBusy ? "Conectando…" : "Entrar com Google"}</span>
                 </Button>
               </div>
             ) : (

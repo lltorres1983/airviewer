@@ -1267,3 +1267,41 @@ label:has(#camera-size-control), #camera-toggle { display: none !important; }
 .right-rail:has(.aircraft-details) { width: auto; max-width: none; }
 .aircraft-details { width: 100%; }
 }
+
+/* Google Identity light button: https://developers.google.com/identity/branding-guidelines */
+@font-face {
+  font-family: "Google Sans";
+  src: url("/assets/google-sans-medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+.account-signin .google-signin-button {
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid #747775;
+  border-radius: 4px;
+  background: #fff;
+  color: #1f1f1f;
+  font-family: "Google Sans", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  box-shadow: none;
+}
+.google-signin-button img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.account-signin .google-signin-button:hover:not(:disabled) {
+  background: #f2f2f2;
+}
+.account-signin .google-signin-button:active:not(:disabled) {
+  background: #e8e8e8;
+}
+.account-signin .google-signin-button:focus-visible {
+  outline: 2px solid #4285f4;
+  outline-offset: 3px;
+}
