@@ -1,0 +1,75 @@
+interface Elements {
+  map: HTMLDivElement;
+  "mode-eyebrow": HTMLDivElement;
+  route: HTMLDivElement;
+  "aircraft-identity": HTMLDivElement;
+  telemetry: HTMLDivElement;
+  status: HTMLDivElement;
+  "airport-photo": HTMLElement;
+  "airport-photo-image": HTMLImageElement;
+  "airport-photo-caption": HTMLElement;
+  "arrivals-panel": HTMLElement;
+  "arrivals-title": HTMLElement;
+  "arrivals-count": HTMLElement;
+  "schedule-tab": HTMLButtonElement;
+  "live-tab": HTMLButtonElement;
+  "live-signal": HTMLElement;
+  "schedule-view": HTMLDivElement;
+  "schedule-list": HTMLDivElement;
+  "live-view": HTMLDivElement;
+  "arrivals-list": HTMLDivElement;
+  "airport-camera": HTMLElement;
+  "airport-camera-title": HTMLElement;
+  "airport-camera-distance": HTMLElement;
+  "airport-camera-source": HTMLSelectElement;
+  "airport-camera-link": HTMLAnchorElement;
+  "airport-camera-close": HTMLButtonElement;
+  "airport-camera-feed-title": HTMLElement;
+  "airport-camera-frame": HTMLIFrameElement;
+  "airport-camera-extra-feed": HTMLDivElement;
+  "airport-camera-extra-title": HTMLElement;
+  "airport-camera-extra-frame": HTMLIFrameElement;
+  "airport-camera-note": HTMLDivElement;
+  "airport-select": HTMLSelectElement;
+  "refresh-interval": HTMLSelectElement;
+  "zoom-control": HTMLInputElement;
+  "zoom-value": HTMLOutputElement;
+  "panel-scale-control": HTMLInputElement;
+  "panel-scale-value": HTMLOutputElement;
+  "camera-size-control": HTMLInputElement;
+  "camera-size-value": HTMLOutputElement;
+  recenter: HTMLButtonElement;
+  "rotate-map": HTMLButtonElement;
+  "aircraft-view-switch": HTMLButtonElement;
+  "airport-view-switch": HTMLButtonElement;
+  "cardinal-value": HTMLOutputElement;
+  "reload-page": HTMLButtonElement;
+  "view-mode": HTMLButtonElement;
+  "camera-toggle": HTMLButtonElement;
+  "show-diagnostics": HTMLButtonElement;
+  fullscreen: HTMLButtonElement;
+  diagnostics: HTMLElement;
+  "diagnostics-title": HTMLElement;
+  "diagnostics-text": HTMLElement;
+  "close-diagnostics": HTMLButtonElement;
+  "mobile-map": HTMLButtonElement;
+  "mobile-menu-toggle": HTMLButtonElement;
+  "mobile-panel": HTMLElement;
+  "mobile-panel-title": HTMLElement;
+  "mobile-panel-close": HTMLButtonElement;
+  "mobile-menu": HTMLDivElement;
+  "mobile-camera": HTMLDivElement;
+  "mobile-camera-empty": HTMLElement;
+  "mobile-flights": HTMLDivElement;
+  "mobile-flights-empty": HTMLElement;
+  "mobile-options": HTMLDivElement;
+}
+
+/** Fail early when the map controller and React surface disagree. */
+export function element<K extends keyof Elements>(id: K): Elements[K];
+export function element(id: string): HTMLElement;
+export function element(id: string): HTMLElement {
+  const node = document.getElementById(id);
+  if (!node) throw new Error(`Elemento obrigatório ausente: ${id}`);
+  return node;
+}

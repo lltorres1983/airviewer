@@ -1,0 +1,97 @@
+import { test, expect } from "@playwright/test";
+
+import { fixtures } from "./fixtures";
+
+test("mapa, shadcn, programação, seleção e controles no desktop", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await fixtures(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+  await expect(page.getByAltText("Airviewer")).toBeVisible();
+  await expect(page.locator(".maplibregl-canvas")).toBeVisible();
+  await expect.poll(() => page.workers().length).toBeGreaterThan(0);
+  expect(await page.workers()[0].evaluate(() => 1)).toBe(1);
+  await expect(page.locator("#recenter")).toHaveAttribute(
+    "data-slot",
+    "button",
+  );
+  await expect(page.locator(".schedule-row")).toContainText("TAM1234");
+  await page.locator(".schedule-row").click();
+  await expect(page.locator("#route")).toHaveText("GIG -> GRU");
+  await page.locator("#live-tab").click();
+  await expect(page.locator(".arrival-row")).toContainText("TAM1234");
+  await page.getByRole("button", { name: "Leste", exact: true }).click();
+  await expect(page.locator("#cardinal-value")).toHaveText("L 090°");
+  await page.locator("#show-diagnostics").click();
+  await expect(page.locator("#diagnostics")).toBeVisible();
+  await page.locator("#close-diagnostics").click();
+  await page.locator("#airport-select").selectOption("SDU");
+  await expect(page.locator("#route")).toHaveText("TRAFEGO SDU");
+  await expect(page.locator("#arrivals-title")).toHaveText("MOVIMENTOS - SDU");
+  await page.screenshot({ path: "test-results/desktop.png" });
+  await expect(page.locator("#diagnostics-text")).not.toContainText(
+    "Worker failed",
+  );
+  expect(errors).toEqual([]);
+});
+
+test("menu, voos e câmera no celular, com retorno ao desktop", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await fixtures(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.locator("#mobile-menu-toggle").click();
+  await expect(page.locator("#mobile-options #airport-select")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Próximos voos", exact: true })
+    .click();
+  await expect(page.locator(".schedule-row")).toBeVisible();
+  await page.screenshot({ path: "test-results/mobile-flights.png" });
+  await page.locator(".schedule-row").click();
+  await expect(page.locator("#mobile-panel")).toBeHidden();
+  await page.locator("#mobile-menu-toggle").click();
+  await page
+    .getByRole("button", { name: "Câmera do aeroporto", exact: true })
+    .click();
+  await expect(page.locator("#airport-camera-frame")).toHaveAttribute(
+    "src",
+    /youtube-nocookie/,
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#airport-camera-frame")).not.toHaveAttribute(
+    "src",
+  );
+  await page.screenshot({ path: "test-results/mobile.png" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(
+    page.locator("body #root > .controls #airport-select"),
+  ).toBeVisible();
+  await expect(page.locator("#diagnostics-text")).not.toContainText(
+    "Worker failed",
+  );
+  expect(errors).toEqual([]);
+});
+
+test("falhas nas APIs exibem estado de indisponibilidade", async ({ page }) => {
+  await fixtures(page);
+  await page.route("**/schedule.json", (route) =>
+    route.fulfill({ status: 503, body: "" }),
+  );
+  await page.route("https://proxy.cors.dev/**", (route) =>
+    route.fulfill({ status: 503, body: "" }),
+  );
+  await page.goto("/");
+  await expect(page.locator("#schedule-list")).toContainText(
+    "Programação temporariamente indisponível",
+  );
+  await page.locator("#live-tab").click();
+  await expect(page.locator("#arrivals-list")).toContainText(
+    "Sinal ADS-B temporariamente indisponível",
+  );
+});

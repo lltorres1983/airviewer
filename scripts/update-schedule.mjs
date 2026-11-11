@@ -68,4 +68,4 @@ for (const [code, movements] of Object.entries(airports)) {
   console.log(`${code}: ${movements.size} movimentos programados`);
 }
 
-await writeFile(process.argv[2] || 'web/schedule.json', JSON.stringify({ start, end, airports: schedules }));
+await writeFile(process.argv[2] || 'web/public/schedule.json', JSON.stringify({ start, end, airports: schedules }));
