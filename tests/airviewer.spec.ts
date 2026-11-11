@@ -143,3 +143,51 @@ for (const tab of ['schedule', 'live']) {
     await expect(page.locator('#cardinal-value')).toHaveText('L 090°');
   });
 }
+
+test('programação busca o voo fora da área do aeroporto e centraliza sua posição', async ({ page }) => {
+  await fixtures(page, []);
+  await page.route('**/v2/callsign/TAM1234', route => route.fulfill({json:{ac:[{
+    hex:'abc123', flight:'TAM1234 ', r:'PT-ABC', t:'A320', lat:-22.9, lon:-43.2,
+    alt_baro:18000, track:220, seen_pos:2,
+  }]}}));
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto('/');
+  await expect.poll(() => page.locator('html').getAttribute('data-airport-traffic-received-at')).not.toBeNull();
+  await page.locator('.schedule-row').click();
+  await expect(page.locator('.aircraft-details-header')).toContainText('PT-ABC');
+  await expect(async () => {
+    const marker = (await page.locator('.aircraft-marker').boundingBox())!;
+    const map = (await page.locator('.maplibregl-canvas').boundingBox())!;
+    expect(marker).not.toBeNull();
+    expect(Math.abs(marker.x + marker.width / 2 - (map.x + map.width / 2))).toBeLessThan(3);
+    expect(Math.abs(marker.y + marker.height / 2 - (map.y + map.height / 2))).toBeLessThan(3);
+  }).toPass({timeout:10000});
+});
+
+test('programação não seleciona posição antiga ou de outro voo', async ({page}) => {
+  await fixtures(page, []);
+  await page.route('**/v2/callsign/TAM1234', route => route.fulfill({json:{ac:[
+    {hex:'abc123', flight:'TAM1234', lat:-22.9, lon:-43.2, seen_pos:120},
+    {hex:'abc124', flight:'TAM9999', lat:-22.9, lon:-43.2, seen_pos:1},
+  ]}}));
+  await page.goto('/');await page.locator('.schedule-row').click();
+  await expect(page.locator('#status')).toContainText('sem posição ADS-B disponível');
+  await expect(page.locator('.aircraft-marker')).toBeHidden();
+  await expect(page.locator('.aircraft-details')).toHaveCount(0);
+});
+
+test('resposta atrasada da programação não troca a seleção de aeroporto', async ({page}) => {
+  await fixtures(page, []);
+  let release!: () => void;
+  const wait = new Promise<void>(resolve => {release=resolve;});
+  await page.route('**/v2/callsign/TAM1234', async route => {
+    await wait;await route.fulfill({json:{ac:[{hex:'abc123',flight:'TAM1234',lat:-22.9,lon:-43.2,seen_pos:1}]}});
+  });
+  await page.goto('/');
+  const requested=page.waitForRequest('**/v2/callsign/TAM1234');
+  await page.locator('.schedule-row').click();await requested;
+  await page.locator('#airport-select').selectOption('SDU');
+  const response=page.waitForResponse('**/v2/callsign/TAM1234');release();await response;
+  await expect(page.locator('#route')).toHaveText('TRAFEGO SDU');
+  await expect(page.locator('.aircraft-marker')).toBeHidden();
+});

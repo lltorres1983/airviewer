@@ -973,7 +973,57 @@ export function startAirviewer() {
       );
       centerSelectedAircraft();
     } else {
-      status.textContent = `${flight.flight} selecionado | aguardando posicao ADS-B`;
+      void locateScheduledAircraft(flight, airport, pendingFlightSelection);
+    }
+  }
+
+  async function locateScheduledAircraft(
+    flight: ScheduledFlight,
+    airport: Airport,
+    selection: NonNullable<typeof pendingFlightSelection>,
+  ) {
+    const stillSelected = () => !lifecycle.signal.aborted &&
+      pendingFlightSelection === selection && activeAirportCamera?.code === airport.code;
+    status.textContent = `${flight.flight} | buscando posição atual da aeronave…`;
+    try {
+      const payload = await fetchAdsb(`callsign/${encodeURIComponent(flightKey(flight.flight))}`);
+      if (!stillSelected()) return;
+      const candidates = payload.ac.filter(raw =>
+        flightKey(raw.flight) === flightKey(flight.flight) &&
+        /^[a-f0-9]{6}$/i.test(raw.hex || "") &&
+        typeof raw.lat === "number" && Number.isFinite(raw.lat) && Math.abs(raw.lat) <= 90 &&
+        typeof raw.lon === "number" && Number.isFinite(raw.lon) && Math.abs(raw.lon) <= 180 &&
+        typeof raw.seen_pos === "number" && Number.isFinite(raw.seen_pos) && raw.seen_pos >= 0 && raw.seen_pos <= 60,
+      );
+      if (candidates.length !== 1) {
+        status.textContent = candidates.length > 1
+          ? `${flight.flight} | mais de uma aeronave encontrada; posição não confirmada`
+          : `${flight.flight} | sem posição ADS-B disponível no momento`;
+        return;
+      }
+      const raw = candidates[0];
+      const lat = raw.lat!, lon = raw.lon!;
+      const finite = (value: unknown, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+      const aircraft: TrafficAircraft = {
+        hex: raw.hex!.toLowerCase(),
+        registration: String(raw.r || "").trim().toUpperCase(),
+        flight: normalizeTrafficFlight(raw.flight, raw.r, raw.hex),
+        type: String(raw.t || "").trim().toUpperCase(),
+        lat, lon,
+        altitude: raw.alt_baro === "ground" ? airport.elevationFeet : finite(raw.alt_baro ?? raw.alt_geom),
+        track: finite(raw.track ?? raw.calc_track ?? raw.true_heading),
+        verticalRate: finite(raw.baro_rate ?? raw.geom_rate),
+        groundSpeed: finite(raw.gs),
+        distance: distanceKm(lat, lon, airport.lat, airport.lon),
+        airportBearing: bearingTo(lat, lon, airport.lat, airport.lon),
+        headingDifference: 0,
+        onGround: raw.alt_baro === "ground",
+        movement: flight.direction,
+      };
+      followTrafficAircraft(aircraft, airport, selection.route, flight.flight);
+      centerSelectedAircraft();
+    } catch {
+      if (stillSelected()) status.textContent = `${flight.flight} | consulta ADS-B indisponível; tente novamente`;
     }
   }
 
