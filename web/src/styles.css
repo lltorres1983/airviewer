@@ -1504,3 +1504,63 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
 .precipitation-legend span { display: inline-flex; gap: 4px; align-items: center; }
 .precipitation-legend i { width: 16px; height: 12px; border: 1px solid #ccc; }
 @media(max-width: 800px) { .nearby-panel .nearby-layout { grid-template-columns: minmax(0, 1fr); } .sky-camera-page { padding: 18px; } .sky-camera-page .observatory-header { flex-wrap: wrap; } }
+
+/* Nearby dashboard: the map leads; conditions and traffic stay within reach. */
+.observatory-panel.nearby-panel { inset: 16px; padding: 24px; background: #081521; scrollbar-color: #49637a #081521; }
+.nearby-panel > .observatory-header { margin-bottom: 24px; }
+.nearby-panel .observatory-header h2 { font-size: 26px; }
+.nearby-panel .observatory-header p { margin: 6px 0 0; }
+.nearby-location-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; padding: 16px 20px; margin-bottom: 20px; border: 1px solid #2c455b; border-radius: 12px; background: #102334; }
+.nearby-panel h3 { font-size: 16px; font-weight: 600; margin: 0; }
+.nearby-location-bar p { margin: 4px 0 0; color: #bdcedd; font-size: 13px; }
+.nearby-location-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+.nearby-location-actions label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #bdcedd; }
+.nearby-location-actions select { min-width: 84px; }
+.nearby-location-error { flex-basis: 100%; }
+.nearby-dashboard { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+.nearby-map-card, .nearby-dashboard-card, .nearby-dashboard-sidebar > .local-weather { min-width: 0; background: #102334; border: 1px solid #2c455b; border-radius: 12px; padding: 20px; }
+.nearby-dashboard-sidebar { display: grid; gap: 20px; min-width: 0; }
+.nearby-dashboard-sidebar > .local-weather { margin: 0; }
+.nearby-card-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+.nearby-card-heading p { margin: 4px 0 0; font-size: 12px; color: #bdcedd; }
+.nearby-range-label { white-space: nowrap; color: #7ee8ff; font-size: 12px; font-variant-numeric: tabular-nums; }
+.nearby-map-card .weather-traffic-map { height: clamp(380px, 59vh, 760px); border-radius: 6px; }
+.nearby-map-card .weather-layer-controls { gap: 4px 16px; margin-bottom: 12px; }
+.nearby-map-card .weather-layer-controls label { font-size: 12px; }
+.nearby-map-card .maplibregl-ctrl-top-right { top: 0; right: 0; }
+.weather-map-settings { display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, .8fr); gap: 24px; padding: 20px 0; border-bottom: 1px solid #2c455b; }
+.weather-map-settings .weather-opacity { margin: 0; align-content: start; }
+.weather-map-settings .weather-layer-times p:first-child { margin-top: 0; }
+.nearby-panel .weather-layer-times button { font-size: 12px; min-height: 40px; }
+.weather-map-notes summary, .nearby-privacy summary { cursor: pointer; min-height: 44px; display: list-item; align-content: center; font-size: 13px; color: #bdcedd; }
+.nearby-privacy { margin-top: 20px; }
+.nearby-privacy p { max-width: 75ch; color: #bdcedd; font-size: 13px; }
+.nearby-dashboard-sidebar .local-weather-heading { gap: 8px; }
+.nearby-dashboard-sidebar .local-weather-heading button { font-size: 12px; padding: 6px 10px; min-height: 40px; }
+.nearby-dashboard-sidebar .local-weather-summary { margin: 20px 0; gap: 12px; }
+.nearby-dashboard-sidebar .local-weather-summary > strong { font-size: 28px; }
+.nearby-dashboard-sidebar .local-weather-summary > span { font-size: 13px; }
+.nearby-dashboard-sidebar .local-weather-details { gap: 16px; }
+.nearby-dashboard-sidebar .observatory-note { font-size: 11px; line-height: 1.6; }
+.nearby-traffic-count { color: #7ee8ff; font-size: 20px; font-variant-numeric: tabular-nums; }
+.nearby-traffic-card .nearby-card-heading { margin-bottom: 8px; }
+.nearby-feed-status, .nearby-empty-copy { font-size: 12px; color: #bdcedd; margin: 8px 0 16px; }
+.nearby-traffic-card .nearby-flights { list-style: none; padding: 0; margin: 0; max-height: 280px; scrollbar-color: #49637a #102334; }
+.nearby-traffic-card .nearby-flights li { padding: 0; border-bottom: 1px solid #2c455b; }
+.nearby-traffic-card .nearby-flights button { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 0; border-radius: 0; background: transparent; padding: 12px 8px; font-size: 13px; }
+.nearby-traffic-card .nearby-flights button:hover { background: #19354a; }
+.nearby-traffic-card .nearby-flights button[aria-pressed=true] { background: #283a40; color: #fbbf67; }
+.nearby-flight-distance { white-space: nowrap; font-variant-numeric: tabular-nums; color: #bdcedd; }
+.nearby-selection { margin: 16px 0; padding: 0 0 12px; border: 0; border-bottom: 1px solid #49637a; color: #fbbf67; }
+.nearby-selection span, .nearby-selection small { display: block; margin-top: 4px; font-size: 12px; color: #bdcedd; }
+.nearby-camera-card p { color: #bdcedd; font-size: 13px; line-height: 1.6; margin: 12px 0 16px; }
+.nearby-camera-card .nearby-page-link { width: 100%; justify-content: space-between; text-decoration: none; font-size: 13px; }
+.nearby-map-empty { display: grid; align-content: center; min-height: 400px; max-width: 52ch; margin: auto; padding: 32px; text-align: center; }
+.nearby-map-empty p { color: #bdcedd; line-height: 1.7; font-size: 14px; }
+.nearby-panel :is(button, a, summary, input, select):focus-visible { outline: 2px solid #7ee8ff; outline-offset: 3px; }
+@media(min-width: 1600px) { .nearby-dashboard { grid-template-columns: minmax(0, 1fr) 380px; } }
+@media(max-width: 1100px) { .nearby-dashboard { grid-template-columns: minmax(0, 1fr) 300px; } .weather-map-settings { grid-template-columns: minmax(0, 1fr); gap: 16px; } .nearby-map-card, .nearby-dashboard-card, .nearby-dashboard-sidebar > .local-weather { padding: 16px; } }
+@media(max-width: 850px) { .nearby-dashboard { grid-template-columns: minmax(0, 1fr); } .nearby-dashboard-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); } .nearby-camera-card { grid-column: 1 / -1; } }
+@media(max-width: 560px) { .observatory-panel.nearby-panel { inset: 0; border: 0; border-radius: 0; padding: max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom)); } .nearby-panel .observatory-header h2 { font-size: 22px; } .nearby-panel > .observatory-header { gap: 12px; margin-bottom: 20px; } .nearby-location-bar { padding: 16px; } .nearby-location-actions { width: 100%; justify-content: space-between; gap: 12px; } .nearby-location-actions button { flex: 1; font-size: 12px; padding: 8px; } .nearby-dashboard-sidebar { grid-template-columns: minmax(0, 1fr); } .nearby-map-card .weather-traffic-map { height: 420px; } .nearby-card-heading { align-items: start; } .nearby-map-empty { min-height: 300px; padding: 20px; } }
+.nearby-map-card .maplibregl-ctrl-bottom-right, .nearby-map-card .maplibregl-ctrl-bottom-left { bottom: 0; }
+.nearby-map-card .maplibregl-ctrl-attrib { font-size: 10px; line-height: 1.5; }

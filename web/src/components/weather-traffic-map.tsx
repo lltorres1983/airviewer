@@ -19,6 +19,10 @@ function ringGeo(origin: Observer, radius: number): FeatureCollection {
   });
   return { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates } }, { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [origin.longitude, origin.latitude] } }] };
 }
+function frameRadar(map: maplibregl.Map, origin: Observer, radius: number) {
+  const delta = radius / 111.32, horizontal = delta / Math.max(.09, Math.cos(origin.latitude * Math.PI / 180));
+  map.fitBounds([[origin.longitude - horizontal, origin.latitude - delta], [origin.longitude + horizontal, origin.latitude + delta]], { padding: 35, duration: 0, maxZoom: 12 });
+}
 export function WeatherTrafficMap({ origin, aircraft, radius, selected, onSelect, now }: { origin: Observer; aircraft: NearbyAircraft[]; radius: number; selected: string; onSelect: (hex: string) => void; now: number }) {
   const container = useRef<HTMLDivElement>(null), map = useRef<maplibregl.Map | null>(null);
   const latest = useRef({ origin, aircraft, radius, selected, onSelect }); latest.current = { origin, aircraft, radius, selected, onSelect };
@@ -80,7 +84,7 @@ export function WeatherTrafficMap({ origin, aircraft, radius, selected, onSelect
       instance.on('click', 'aircraft-symbols', event => { const hex = event.features?.[0]?.properties?.hex; if (typeof hex === 'string') latest.current.onSelect(hex); });
       setReady(true);
     });
-    const resize = new ResizeObserver(() => instance.resize()); resize.observe(container.current);
+    const resize = new ResizeObserver(() => { instance.resize(); frameRadar(instance, latest.current.origin, latest.current.radius); }); resize.observe(container.current);
     return () => { resize.disconnect(); instance.remove(); map.current = null; setReady(false); };
   }, []);
   useEffect(() => {
@@ -90,8 +94,7 @@ export function WeatherTrafficMap({ origin, aircraft, radius, selected, onSelect
   useEffect(() => {
     if (!ready || !map.current) return;
     (map.current.getSource('coverage-rings') as GeoJSONSource).setData(ringGeo(origin, radius));
-    const delta = radius / 111.32, horizontal = delta / Math.max(.09, Math.cos(origin.latitude * Math.PI / 180));
-    map.current.fitBounds([[origin.longitude - horizontal, origin.latitude - delta], [origin.longitude + horizontal, origin.latitude + delta]], { padding: 35, duration: 0, maxZoom: 12 });
+    frameRadar(map.current, origin, radius);
   }, [ready, radius, origin.latitude, origin.longitude]);
   useEffect(() => {
     const instance = map.current; if (!ready || !instance) return;
@@ -119,11 +122,12 @@ export function WeatherTrafficMap({ origin, aircraft, radius, selected, onSelect
     <div className="weather-layer-controls"><label><input type="checkbox" checked={showCloud} onChange={e => setShowCloud(e.target.checked)} />Nuvens · satélite</label><label><input type="checkbox" checked={showRain} onChange={e => setShowRain(e.target.checked)} />Precipitação</label><label><input type="checkbox" checked={showCoverage} onChange={e => setShowCoverage(e.target.checked)} />Limites de cobertura</label></div>
     <div ref={container} className="weather-traffic-map" aria-label="Mapa de nuvens, precipitação e aeronaves" data-clouds={showCloud && !!freshCloud && !tileErrors['weather-cloud']} data-rain={showRain && !!freshRain && !tileErrors['weather-rain']} />
     {mapError && <p role="alert">{mapError}</p>}
-    <div className="weather-opacity"><label>Opacidade das nuvens<input aria-label="Opacidade das nuvens" type="range" min="0" max="1" step=".1" value={cloudOpacity} onChange={e => setCloudOpacity(Number(e.target.value))} /></label><label>Opacidade da precipitação<input aria-label="Opacidade da precipitação" type="range" min="0" max="1" step=".1" value={rainOpacity} onChange={e => setRainOpacity(Number(e.target.value))} /></label></div>
+    <div className="weather-map-settings"><div className="weather-opacity"><label>Opacidade das nuvens<input aria-label="Opacidade das nuvens" type="range" min="0" max="1" step=".1" value={cloudOpacity} onChange={e => setCloudOpacity(Number(e.target.value))} /></label><label>Opacidade da precipitação<input aria-label="Opacidade da precipitação" type="range" min="0" max="1" step=".1" value={rainOpacity} onChange={e => setRainOpacity(Number(e.target.value))} /></label></div>
     <div className="weather-layer-times"><p>{freshCloud ? `Satélite · captura ${stamp(freshCloud.time)}` : !inCloudArea ? 'GOES-East não cobre esta localização.' : cloudError || (loading ? 'Consultando satélite…' : 'Sem imagem recente de nuvens.')}</p><p>{freshRain ? `Precipitação · composição ${stamp(freshRain.time)}` : rainError || (loading ? 'Consultando precipitação…' : 'Sem composição recente de precipitação.')}</p><button disabled={loading} onClick={() => setRevision(n => n + 1)}>{loading ? 'Atualizando camadas…' : 'Atualizar camadas'}</button></div>
+    </div>
     {Object.keys(tileErrors).length > 0 && <p role="alert">Não foi possível carregar uma camada de imagem. Use “Atualizar camadas” para tentar novamente.</p>}
     <div className="precipitation-legend" aria-label="Legenda de refletividade da precipitação em dBZ"><span>Refletividade (dBZ)</span>{[[15, '#88ddee'], [20, '#00a3e0'], [30, '#005588'], [35, '#ffee00'], [40, '#ffaa00'], [45, '#ff4400']].map(([number, color]) => <span key={number}><i style={{ background: String(color) }} />{number}</span>)}</div>
-    <p className="observatory-note">Horários do dispositivo. Nuvens: imagem GeoColor de satélite, que também mostra a superfície. Áreas escurecidas: fora da cobertura de precipitação. Sem manchas não garante ausência de chuva. As camadas têm resolução regional; ampliar não acrescenta detalhes meteorológicos. Aeronaves atualizadas separadamente dentro do círculo de {radius} km.</p>
-    <p className="observatory-note">Fontes: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a> · <a href={CLOUD_SERVICE} target="_blank" rel="noopener noreferrer">NOAA GOES-East</a>.</p>
+    <details className="weather-map-notes"><summary>Como interpretar as camadas</summary><p className="observatory-note">Horários do dispositivo. Nuvens: imagem GeoColor de satélite, que também mostra a superfície. Áreas escurecidas: fora da cobertura de precipitação. Sem manchas não garante ausência de chuva. As camadas têm resolução regional; ampliar não acrescenta detalhes meteorológicos. Aeronaves atualizadas separadamente dentro do círculo de {radius} km.</p>
+    <p className="observatory-note">Fontes: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a> · <a href={CLOUD_SERVICE} target="_blank" rel="noopener noreferrer">NOAA GOES-East</a>.</p></details>
   </section>;
 }

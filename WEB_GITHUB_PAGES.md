@@ -289,7 +289,12 @@ precisão da bússola e permissões precisam de validação em aparelhos reais.
 
 Validação: `npx playwright test tests/nearby-radar.spec.ts --workers=1`.
 
-O radar local agora sobrepõe aeronaves, nuvens e precipitação em um mapa
+O radar local usa um dashboard com mapa em destaque, barra de localização e
+alcance, cards de meteorologia, aeronaves próximas e acesso à câmera. No celular,
+os cards se organizam abaixo do mapa. Notas das camadas e privacidade podem ser
+expandidas sem interromper o uso do radar.
+
+O radar local sobrepõe aeronaves, nuvens e precipitação em um mapa
 geográfico, com círculo de alcance, seleção de voos e controles de opacidade.
 A camada GeoColor do NOAA GOES-East mostra nuvens e superfície; a precipitação
 usa a composição mais recente do RainViewer, com legenda em dBZ e máscara de
