@@ -249,3 +249,10 @@ Validação: `npx playwright test tests/airport-operations.spec.ts tests/airport
   criptografado nem sincronização em nuvem.
 
 Validação: `npx playwright test tests/observatory.spec.ts --workers=1`.
+
+A fila de aproximação em **Torre e spotting** e **GRU × GIG** usa um diagrama
+vertical sem escala, com pista, silhuetas de aeronaves, ordem por distância,
+altitude e tempo estimado. O voo mais próximo fica destacado. Na torre, clicar
+acompanha a aeronave; na comparação, abre o registro no diário. A pista permanece
+indicada como provável ou indeterminada; o diagrama não representa autorização
+ou sequência oficial de pouso.

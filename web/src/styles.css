@@ -1388,3 +1388,28 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
   .diary-entries li { flex-direction: column; }
   .observatory-panel input[type=file] { width: 100%; }
 }
+
+/* Ordinal approach diagram: planes point toward the airport, with no map scale. */
+.approach-destination { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; align-items: center; margin-top: 18px; }
+.approach-runway { width: 44px; height: 76px; color: #fbbf67; }
+.approach-destination strong { display: block; font-size: 15px; color: #fbbf67; }
+.approach-destination span, .approach-destination small { display: block; color: #bdcedd; margin-top: 4px; font-size: 12px; }
+.visual-approach-list { list-style: none; padding: 0; margin: 0 0 16px; }
+.visual-approach-list li { position: relative; border: 0; padding: 0; }
+.visual-approach-list li::before { content: ''; position: absolute; left: 21px; top: 0; bottom: 0; border-left: 2px dashed #52738d; pointer-events: none; }
+.visual-approach-list li:last-child::before { bottom: 50%; }
+.visual-approach-list .visual-approach-flight { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 14px; width: 100%; padding: 16px 0; border: 0; border-radius: 0; text-align: left; background: transparent; color: #e0f2fe; font: inherit; cursor: pointer; }
+.visual-approach-list .visual-approach-flight:hover { background: #163247; }
+.visual-approach-list .visual-approach-flight:focus-visible { outline: 2px solid #7ee8ff; outline-offset: 2px; }
+.approach-plane { position: relative; display: grid; place-items: center; width: 44px; height: 48px; background: #0c1a29; color: #7ee8ff; }
+.spotting-panel .approach-plane { background: #071521; }
+.approach-plane svg { width: 34px; height: 34px; }
+.visual-approach-list li:first-child .approach-plane { color: #fbbf67; }
+.approach-flight-info { display: flex; min-width: 0; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+.approach-flight-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; }
+.approach-flight-title strong { font-size: 15px; }
+.approach-position { color: #b8d9ec; font-weight: 400; }
+.approach-eta { color: #7ee8ff; font-size: 14px; font-variant-numeric: tabular-nums; }
+.approach-flight-metrics { font-size: 13px; font-variant-numeric: tabular-nums; }
+.approach-flight-info small { color: #bdcedd; font-size: 12px; }
+.approach-flight-action { color: #7ee8ff; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; margin-top: 3px; }

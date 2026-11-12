@@ -1,3 +1,4 @@
+import { VisualApproachQueue } from "./visual-approach-queue";
 import { useEffect, useState } from 'react';
 import { FOCUS_AIRPORTS, useComparisonFeed } from '@/lib/comparison-feed';
 import { approachQueue } from '@/lib/airport-operations';
@@ -20,7 +21,7 @@ function AirportColumn({ airport, weather }: { airport: FocusAirport; weather: W
     <TrafficMap airport={airport} aircraft={traffic} />
     {metar ? <div className="comparison-weather"><strong>{now - metar.obsTime * 1000 > 90 * 60000 ? 'METAR desatualizado' : 'METAR'}</strong><p>{windText(metar)} · {visibilityText(metar, metar.rawOb)}</p><details><summary>Boletim e horário</summary><p>{new Date(metar.obsTime * 1000).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })} (Brasília)</p><p>{metar.rawOb}</p></details></div> : <p>METAR indisponível</p>}
     <h4>Próximas aproximações estimadas</h4>
-    {queue.length ? <ul className="comparison-queue">{queue.map(item => <li key={item.aircraft.hex}><div><strong>{item.aircraft.flight}</strong><span>{item.aircraft.type} · {item.runway ? `Pista provável ${item.runway}` : 'Pista não identificada'} · {item.distance.toFixed(1)} km</span></div><button aria-label={`Registrar ${item.aircraft.flight} no diário`} onClick={() => openObservatory('diary', { hex: item.aircraft.hex, registration: item.aircraft.registration, type: item.aircraft.type, flight: item.aircraft.flight, airport, observedAt: new Date().toISOString() })}>Registrar</button></li>)}</ul> : <p>Nenhuma aproximação identificada.</p>}
+    <VisualApproachQueue airport={airport} queue={queue} action="Registrar" onSelect={({ aircraft }) => openObservatory('diary', { hex: aircraft.hex, registration: aircraft.registration, type: aircraft.type, flight: aircraft.flight, airport, observedAt: new Date().toISOString() })} />
     <p className="observatory-note">Estimativas ADS-B; não são instruções de controle de tráfego.</p>
     <h4>Câmera</h4>
     {airport === 'GRU' ? <><button onClick={() => setCamera(!camera)}>{camera ? 'Fechar câmera GRU' : 'Abrir câmera GRU'}</button>{camera && <iframe className="comparison-camera" title="Câmera de Guarulhos" src="https://www.youtube-nocookie.com/embed/live_stream?channel=UCNZCKDhAVtbh7sddChTxI7w" allow="encrypted-media; picture-in-picture" allowFullScreen />}</> : <p>Sem câmera ao vivo verificada para o Galeão.</p>}

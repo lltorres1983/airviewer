@@ -1,3 +1,4 @@
+import { VisualApproachQueue } from "./visual-approach-queue";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Dialog } from 'radix-ui';
 import { Button } from './ui/button';
@@ -110,14 +111,7 @@ function SpottingPanel({ storageKey }: { storageKey: string }) {
             <section aria-labelledby="approach-heading">
               <h3 id="approach-heading">Fila de aproximação</h3>
               <p>Ordenada por distância. Pista provável e tempo são estimativas pelo ADS-B, não a sequência autorizada de pouso.</p>
-              {stale ? <p role="status">{snapshot.message || 'Sinal ADS-B desatualizado. Aguardando novas posições.'}</p> : queue.length === 0 ? <p role="status">Nenhuma aproximação identificada agora.</p> : <ol className="approach-queue">
-                {queue.slice(0, 12).map(({ aircraft, runway, distance, minutes }) => <li key={aircraft.hex}>
-                  <button type="button" onClick={() => airportCommand({ type: 'aircraft', hex: aircraft.hex })}>
-                    <strong>{aircraft.flight}</strong><span>{distance.toFixed(1).replace('.', ',')} km · {minutes ? `~${minutes} min` : 'Tempo indeterminado'}</span>
-                    <small>{aircraft.type} · {Math.round(aircraft.altitude).toLocaleString('pt-BR')} pés · {runway ? `Pista provável ${runway}` : 'Pista indeterminada'}</small>
-                  </button>
-                </li>)}
-              </ol>}
+              {stale ? <p role="status">{snapshot.message || 'Sinal ADS-B desatualizado. Aguardando novas posições.'}</p> : <VisualApproachQueue airport={snapshot.code} queue={queue.slice(0, 12)} onSelect={({ aircraft }) => airportCommand({ type: 'aircraft', hex: aircraft.hex })} />}
             </section>
             <section aria-labelledby="weather-heading">
               <h3 id="weather-heading">Meteorologia · {snapshot.code}</h3>
