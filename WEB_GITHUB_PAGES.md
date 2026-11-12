@@ -26,7 +26,7 @@ o script que gera a programação e esta documentação.
 5. O endereço será parecido com `https://SEU_USUARIO.github.io/SEU_REPOSITORIO/`.
 
 O workflow também pode ser executado manualmente em **Actions > Deploy AirViewer web > Run workflow**.
-A publicação gera `web/public/schedule.json` e atualiza o arquivo a cada seis horas. Se o GitHub suspender as execuções agendadas por inatividade, reative o workflow para retomar as atualizações.
+A publicação gera `web/public/schedule.json` e atualiza o arquivo junto ao deploy agendado a cada 30 minutos. Se o GitHub suspender as execuções agendadas por inatividade, reative o workflow para retomar as atualizações.
 
 ## Limitações atuais
 
@@ -157,3 +157,61 @@ a ativação e o OAuth do projeto hospedado precisam ser validados após a confi
 Referências: [Google no Supabase](https://supabase.com/docs/guides/auth/social-sign-in/auth-google),
 [URLs de retorno](https://supabase.com/docs/guides/auth/redirect-urls) e
 [controle de acesso por linha](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+## Radar da minha casa
+
+Em **Conta e favoritos → Radar da minha casa**, o usuário informa uma referência
+ou endereço, coordenadas e raio de 5, 10 ou 20 km. O botão de localização atual
+preenche as coordenadas mediante a permissão do navegador; o endereço não é
+geocodificado automaticamente. **Salvar localização** persiste os dados na conta,
+e **Abrir radar 3D** centraliza o mapa inclinado na casa, com anéis de distância.
+O painel mostra tráfego ADS-B dentro do raio, incluindo helicópteros e sobrevoos,
+com distância, altitude e indicação de aproximação conforme o rumo informado.
+Isso não é uma previsão de passagem sobre a casa.
+
+Aplique `supabase/migrations/20261112000000_home_radar.sql` no mesmo projeto Supabase
+antes de publicar este recurso. A tabela `home_radar` permite uma localização por
+usuário; RLS restringe leitura e alterações ao dono. A exclusão da conta remove a
+localização. **Excluir localização** apaga o registro, e sair da conta limpa o
+radar da tela. O modo ativo não é persistido automaticamente entre visitas.
+O endereço não é incluído no código, nos arquivos estáticos ou na URL da página.
+A consulta regional de tráfego usa as coordenadas no serviço ADS-B existente.
+
+`npm run test:db` verifica também isolamento, validação e exclusão do radar.
+`npx playwright test tests/home-radar.spec.ts --workers=1` valida o fluxo com
+respostas simuladas; não grava endereços no projeto Supabase hospedado.
+
+
+## Torre e spotting — GRU e GIG
+
+O botão **Torre e spotting** abre um painel com quatro recursos:
+
+- **Torre 3D:** escolha uma pista para abrir um ponto de vista virtual junto a ela.
+  O enquadramento permanece ao selecionar aviões; **Recentrar torre** restaura a
+  vista. Não representa a posição da torre real. Aviões próximos e abaixo de
+  8.000 pés acima da elevação do aeroporto ficam em destaque.
+- **Fila de aproximação:** tráfego convergente, abaixo de 12.000 pés acima do
+  aeroporto, ordenado por distância. Pista provável usa alinhamento com os eixos
+  desenhados; paralelas ambíguas ficam indeterminadas. O tempo é uma extrapolação
+  da distância e velocidade de aproximação, sem considerar autorização ATC,
+  vetoração ou esperas. Dados com mais de 60 segundos não geram estimativas.
+- **Meteorologia:** METAR e TAF de SBGR/SBGL, traduzidos para vento, visibilidade,
+  nuvens e fenômenos. A origem desta implementação é NOAA/AWC, sem chave REDEMET.
+  Observações com mais de 90 minutos e previsões vencidas são sinalizadas.
+- **Alertas de spotting:** modelos ICAO, matrículas e favoritos da conta, dentro
+  de 20, 40 ou 80 km do aeroporto selecionado. Os avisos aparecem no aplicativo;
+  não são notificações push nem monitoramento com a página fechada. Preferências
+  ficam neste navegador, separadas por conta. A mesma aeronave não gera novo
+  aviso enquanto continuar sendo observada; o registro expira após 15 minutos
+  sem novas detecções correspondentes. O histórico exibido contém até oito avisos.
+
+Execute `npm run weather` para gerar `web/public/weather.json` localmente.
+O workflow executa a coleta antes do build e agenda publicações a cada 30 minutos;
+o GitHub pode atrasar execuções. O navegador consulta o arquivo publicado a cada
+cinco minutos enquanto o painel está aberto. Se a coleta falhar, o produto
+correspondente fica indisponível, sem fabricar condições meteorológicas.
+A coleta ocorre no servidor porque a [API NOAA/AWC](https://aviationweather.gov/data/api/)
+não permite CORS; nenhuma chave privada é incluída no frontend.
+
+Validação: `npx playwright test tests/airport-operations.spec.ts tests/airport-spotting.spec.ts --workers=1`.
+O replay de tráfego não está incluído nesta etapa.

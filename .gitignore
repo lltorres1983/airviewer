@@ -8,3 +8,4 @@ web/public/schedule.json
 !.env.example
 supabase/.temp/
 .test-dist/
+web/public/weather.json

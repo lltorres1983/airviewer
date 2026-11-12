@@ -1,3 +1,5 @@
+import { RUNWAYS, bearing as runwayBearing, publishAirportSnapshot, subscribeAirportCommands } from "./airport-operations";
+import { getRadarOrigin, setRadarOrigin, subscribeRadarOrigin } from "./home-radar";
 import * as maplibregl from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import type { FeatureCollection } from "geojson";
@@ -61,6 +63,9 @@ export function startAirviewer() {
   };
   let map: maplibregl.Map;
   let marker: maplibregl.Marker | null = null;
+  let homeMarker: maplibregl.Marker | null = null;
+  let regionGeneration = 0;
+  let towerRunway: string | null = null;
   let currentAircraftType = initialAircraftType;
   let trackedMarkerElement: HTMLDivElement | null = null;
   let refreshTimer: ReturnType<typeof setInterval> | undefined;
@@ -129,9 +134,6 @@ export function startAirviewer() {
   const refreshInterval = element("refresh-interval");
   const airportCamera = element("airport-camera");
   const airportCameraFrame = element("airport-camera-frame");
-  const airportCameraExtraFeed = element("airport-camera-extra-feed");
-  const airportCameraExtraFrame = element("airport-camera-extra-frame");
-  const airportCameraExtraTitle = element("airport-camera-extra-title");
   const airportCameraDistance = element("airport-camera-distance");
   const airportCameraTitle = element("airport-camera-title");
   const airportCameraLink = element("airport-camera-link");
@@ -203,7 +205,6 @@ export function startAirviewer() {
       if (view === "camera") showAirportCamera();
       else {
         airportCameraFrame.removeAttribute("src");
-        airportCameraExtraFrame.removeAttribute("src");
       }
     }
     if (focus)
@@ -348,74 +349,8 @@ export function startAirviewer() {
   ];
   const airportRunways: FeatureCollection = {
     type: "FeatureCollection",
-    features: [
-      {
-        type: "Feature",
-        properties: { airport: "GIG", runway: "10 / 28" },
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [-43.255199, -22.8018],
-            [-43.217701, -22.7922],
-          ],
-        },
-      },
-      {
-        type: "Feature",
-        properties: { airport: "GIG", runway: "15 / 33" },
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [-43.263699, -22.812401],
-            [-43.238499, -22.8291],
-          ],
-        },
-      },
-      {
-        type: "Feature",
-        properties: { airport: "GRU", runway: "10L / 28R" },
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [-46.482548, -23.434059],
-            [-46.449203, -23.425043],
-          ],
-        },
-      },
-      {
-        type: "Feature",
-        properties: { airport: "GRU", runway: "10R / 28L" },
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [-46.487, -23.438801],
-            [-46.4589, -23.4312],
-          ],
-        },
-      },
-      {
-        type: "Feature",
-        properties: { airport: "SDU", runway: "02L / 20R" },
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [-43.163333, -22.915833],
-            [-43.163889, -22.904722],
-          ],
-        },
-      },
-      {
-        type: "Feature",
-        properties: { airport: "SDU", runway: "02R / 20L" },
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            [-43.1625, -22.916389],
-            [-43.163333, -22.904722],
-          ],
-        },
-      },
-    ],
+    features: RUNWAYS.map(runway => ({ type: "Feature", properties: { airport: runway.airport, runway: runway.ends.join(" / ") },
+      geometry: { type: "LineString", coordinates: runway.coordinates } })),
   };
   // Referencia visual dos eixos de aproximacao; nao representa uma STAR publicada.
   const airportApproaches: FeatureCollection = {
@@ -657,6 +592,13 @@ export function startAirviewer() {
     return Math.abs(((left - right + 540) % 360) - 180);
   }
 
+  function publishOperations() {
+    publishAirportSnapshot({ code: activeAirportCamera?.code || selectedAirportCode,
+      name: activeAirportCamera?.name || "", elevation: activeAirportCamera?.elevationFeet || 0,
+      traffic: lastAirportTraffic, receivedAt: lastAirportTrafficAt, message: liveMessage, towerRunway });
+    document.documentElement.dataset.airportView = towerRunway ? "tower" : "panorama";
+  }
+
   function clearNearbyArrivals() {
     arrivalsPanel.classList.add("hidden");
     arrivalsList.replaceChildren();
@@ -669,6 +611,7 @@ export function startAirviewer() {
     lastAirportTraffic = [];
     lastAirportTrafficAt = 0;
     lastRegionalSnapshotKey = "";
+    publishOperations();
     airportTrafficStates.clear();
     if (airportTrafficAnimationFrame) {
       cancelAnimationFrame(airportTrafficAnimationFrame);
@@ -696,9 +639,13 @@ export function startAirviewer() {
     message = "",
   ) {
     lastAirportTraffic = arrivals;
+    if (airport.code === "CASA" && !trackedAircraftHex) {
+      status.textContent = message || `Radar de casa | ${arrivals.length} aeronaves | atualizado ${new Date().toLocaleTimeString("pt-BR")}`;
+    }
     arrivalsPanel.classList.remove("hidden");
-    arrivalsTitle.textContent = `MOVIMENTOS - ${airport.code}`;
+    arrivalsTitle.textContent = airport.code === "CASA" ? "AO REDOR DA MINHA CASA" : `MOVIMENTOS - ${airport.code}`;
     setLiveMessage(message);
+    publishOperations();
     arrivalsList.replaceChildren();
     if (!arrivals.length) {
       const empty = document.createElement("div");
@@ -720,6 +667,10 @@ export function startAirviewer() {
       distance.textContent = `${arrival.distance.toFixed(1).replace(".", ",")} km`;
       const detail = document.createElement("small");
       detail.textContent = `${Math.round(arrival.altitude).toLocaleString("pt-BR")} pes | rumo ${Math.round(arrival.track)} graus${arrival.type ? ` | ${arrival.type}` : ""}`;
+      if (airport.code === "CASA") {
+        const direction = arrival.headingDifference <= 70 ? "Se aproximando" : arrival.headingDifference >= 110 ? "Se afastando" : "Passando pela região";
+        detail.textContent = `${direction} | ${detail.textContent}`;
+      }
       row.append(name, distance, detail);
       row.addEventListener(
         "click",
@@ -745,7 +696,7 @@ export function startAirviewer() {
     lastScheduleFlights = flights;
     scheduleMessage = message;
     arrivalsPanel.classList.remove("hidden");
-    arrivalsTitle.textContent = `MOVIMENTOS - ${airport.code}`;
+    arrivalsTitle.textContent = airport.code === "CASA" ? "AO REDOR DA MINHA CASA" : `MOVIMENTOS - ${airport.code}`;
     updateMovementCount();
     scheduleList.replaceChildren();
     redrawAirportTraffic();
@@ -851,6 +802,10 @@ export function startAirviewer() {
   }
 
   function trafficRoute(aircraft: TrafficAircraft) {
+    if (getRadarOrigin()) {
+      const cached = routeCache.get(flightKey(aircraft.flight));
+      return cached?.origin && cached.destination ? `${cached.origin} -> ${cached.destination}` : "ROTA NÃO INFORMADA";
+    }
     const liveFlight = flightKey(aircraft.flight);
     const scheduled = lastScheduleFlights.find(
       (flight) => flightKey(flight.flight) === liveFlight,
@@ -873,6 +828,7 @@ export function startAirviewer() {
   }
 
   function trafficMovement(aircraft: TrafficAircraft) {
+    if (getRadarOrigin()) return aircraft.movement;
     const cached = routeCache.get(flightKey(aircraft.flight));
     const airportCode = String(activeAirportCamera?.code || "").toUpperCase();
     if (cached && airportCode) {
@@ -910,7 +866,7 @@ export function startAirviewer() {
     history.push([current.lon, current.lat]);
     routeElement.textContent =
       selectedRoute || `${aircraft.flight} | ${airport.code}`;
-    modeEyebrow.textContent = "VISAO PANORAMICA 3D";
+    modeEyebrow.textContent = towerRunway ? "TORRE VIRTUAL 3D" : getRadarOrigin() ? "RADAR DA MINHA CASA" : "VISAO PANORAMICA 3D";
     updateAircraftIdentity({ flight: aircraft.flight, t: aircraft.type });
     selectAircraft({
       hex: aircraft.hex,
@@ -933,12 +889,12 @@ export function startAirviewer() {
     status.textContent = `Acompanhando ${aircraft.flight} pelo ADS-B`;
     if (activeAirportCamera?.code === airport.code) {
       renderNearbyArrivals(airport, lastAirportTraffic, liveMessage);
-      renderAirportSchedule(airport, lastScheduleFlights, scheduleMessage);
+      if (!getRadarOrigin()) renderAirportSchedule(airport, lastScheduleFlights, scheduleMessage);
     }
   }
 
   function centerSelectedAircraft() {
-    if (!map || !trackedAircraftHex) return;
+    if (!map || !trackedAircraftHex || towerRunway) return;
     map.stop();
     map.easeTo({
       center: [current.lon, current.lat],
@@ -1031,6 +987,7 @@ export function startAirviewer() {
   }
 
   function setTrafficPanelMode(mode: "schedule" | "live") {
+    if (getRadarOrigin()) mode = "live";
     trafficPanelMode = mode;
     const scheduleSelected = mode === "schedule";
     scheduleTab.setAttribute("aria-selected", String(scheduleSelected));
@@ -1042,7 +999,7 @@ export function startAirviewer() {
   }
 
   async function refreshAirportSchedule(force = false) {
-    if (!activeAirportCamera || scheduleFetchInProgress) return;
+    if (getRadarOrigin() || !activeAirportCamera || scheduleFetchInProgress) return;
     const now = Date.now();
     if (!force && now - lastScheduleRender < 30000) return;
     lastScheduleRender = now;
@@ -1087,7 +1044,7 @@ export function startAirviewer() {
     }
 
     const airport = activeAirportCamera;
-    if (!airport) return;
+    if (!airport || getRadarOrigin()) return;
     const from = Date.now();
     const until = from + 30 * 60000;
     if (
@@ -1148,18 +1105,20 @@ export function startAirviewer() {
     arrivalsFetchInProgress = true;
     lastArrivalsFetch = now;
     const airport = { ...activeAirportCamera };
+    const generation = regionGeneration;
+    const homeMode = airport.code === "CASA";
     const radiusNm = airport.feedRadiusNm || 30;
     try {
       const data = await fetchAdsb(
         `point/${airport.lat}/${airport.lon}/${radiusNm}`,
       );
-      if (activeAirportCamera?.code !== airport.code) return;
+      if (activeAirportCamera?.code !== airport.code || generation !== regionGeneration) return;
       const firstAircraft = (data.ac || [])[0] || {};
       const snapshotKey = `${airport.code}:${data.now || ""}:${data.total || 0}:${firstAircraft.hex || ""}:${firstAircraft.lat || ""}:${firstAircraft.lon || ""}`;
       if (snapshotKey === lastRegionalSnapshotKey) return;
       lastRegionalSnapshotKey = snapshotKey;
       lastAirportTrafficAt = Date.now();
-      document.documentElement.dataset.airportTrafficSnapshot = snapshotKey;
+      document.documentElement.dataset.airportTrafficSnapshot = homeMode ? `CASA:${data.now || ""}` : snapshotKey;
       document.documentElement.dataset.airportTrafficReceivedAt =
         String(lastAirportTrafficAt);
       const traffic = data.ac
@@ -1241,6 +1200,7 @@ export function startAirviewer() {
             ].every(Number.isFinite)
           )
             return false;
+          if (homeMode) return !item.onGround && item.distance <= airport.radiusKm && item.altitude >= -1500 && item.altitude <= 65000;
           if (
             item.altitude - airport.elevationFeet < -200 ||
             item.altitude > 25000 ||
@@ -1265,11 +1225,7 @@ export function startAirviewer() {
         .sort((left, right) => left.distance - right.distance);
 
       renderNearbyArrivals(airport, traffic);
-      animateAirportTraffic(
-        traffic.filter(
-          (aircraft) => aircraft.hex !== trackedAircraftHex.toLowerCase(),
-        ),
-      );
+      animateAirportTraffic(traffic);
       void refreshRouteCache();
       if (
         pendingFlightSelection &&
@@ -1290,7 +1246,7 @@ export function startAirviewer() {
       }
     } catch (error) {
       if (lifecycle.signal.aborted) return;
-      if (activeAirportCamera?.code !== airport.code) return;
+      if (activeAirportCamera?.code !== airport.code || generation !== regionGeneration) return;
       addDiagnostic(
         "Tráfego ADS-B",
         error instanceof Error ? error.message : String(error),
@@ -1422,8 +1378,6 @@ export function startAirviewer() {
       airportCamera.classList.add("hidden");
       cameraToggle.classList.add("hidden");
       airportCameraFrame.removeAttribute("src");
-      airportCameraExtraFrame.removeAttribute("src");
-      airportCameraExtraFeed.classList.add("hidden");
       airportCameraSource.classList.add("hidden");
       return;
     }
@@ -1440,25 +1394,6 @@ export function startAirviewer() {
     airportCameraNote.textContent = selectedSource?.isArchive
       ? "ARQUIVO: este vídeo é uma gravação e não representa uma transmissão ao vivo."
       : "AO VIVO: se o canal não estiver transmitindo publicamente agora, o YouTube mostrará “sem transmissão ao vivo agora”. Nenhuma gravação é usada como fallback.";
-    const liveSources = getCameraSources(activeAirportCamera).filter(
-      (source) => source.isLive,
-    );
-    const secondLiveSource = selectedSource?.isLive
-      ? liveSources.find((source) => source.id !== selectedSource.id)
-      : null;
-    const extraEmbedUrl = secondLiveSource
-      ? cameraEmbedUrl(secondLiveSource)
-      : "";
-    airportCameraExtraTitle.textContent =
-      secondLiveSource?.label || "SEGUNDA FONTE AO VIVO";
-    airportCameraExtraFeed.classList.toggle("hidden", !extraEmbedUrl);
-    if (
-      extraEmbedUrl &&
-      airportCameraExtraFrame.getAttribute("src") !== extraEmbedUrl
-    ) {
-      airportCameraExtraFrame.src = extraEmbedUrl;
-    }
-    if (!extraEmbedUrl) airportCameraExtraFrame.removeAttribute("src");
   }
 
   function updateAirportApproachVisibility() {
@@ -1481,7 +1416,57 @@ export function startAirviewer() {
     ]);
   }
 
+  function homeAirport(): Airport | null {
+    const home = getRadarOrigin();
+    return home ? { code: "CASA", name: "Minha casa", lat: home.latitude, lon: home.longitude,
+      elevationFeet: 0, radiusKm: home.radius_km, feedRadiusNm: home.radius_km / 1.852 } : null;
+  }
+
+  function updateHomeRadarLayers() {
+    const home = getRadarOrigin();
+    if (!home) { homeMarker?.remove(); homeMarker = null; }
+    if (!map || !map.getSource("home-radar-rings")) return;
+    const features: FeatureCollection["features"] = [];
+    if (home) {
+      for (const radius of [5, 10, 20].filter(value => value <= home.radius_km)) {
+        const coordinates = Array.from({ length: 129 }, (_, index) => pointAhead(home.latitude, home.longitude, index * 360 / 128, radius * 1000));
+        features.push({ type: "Feature", properties: { label: `${radius} km` }, geometry: { type: "LineString", coordinates } });
+        features.push({ type: "Feature", properties: { label: `${radius} km` }, geometry: { type: "Point", coordinates: pointAhead(home.latitude, home.longitude, 0, radius * 1000) } });
+      }
+      if (!homeMarker) {
+        const label = document.createElement("div");
+        label.className = "home-radar-marker";
+        const caption = document.createElement("span");
+        caption.textContent = "Minha casa";
+        label.appendChild(caption);
+        homeMarker = new maplibregl.Marker({ element: label }).setLngLat([home.longitude, home.latitude]).addTo(map);
+      } else homeMarker.setLngLat([home.longitude, home.latitude]);
+    } else { homeMarker?.remove(); homeMarker = null; }
+    map.getSource<maplibregl.GeoJSONSource>("home-radar-rings")!.setData({ type: "FeatureCollection", features });
+  }
+
   function updateAirportCamera(): Airport | null {
+    const home = homeAirport();
+    if (home) {
+      towerRunway = null;
+      activeAirportCamera = home;
+      airportOverviewMode = true;
+      airportCamera.classList.add("hidden");
+      cameraToggle.classList.add("hidden");
+      airportCameraFrame.removeAttribute("src");
+      scheduleTab.hidden = true;
+      liveTab.textContent = "AO REDOR DE CASA";
+      setTrafficPanelMode("live");
+      arrivalsTitle.textContent = "AO REDOR DA MINHA CASA";
+      arrivalsPanel.classList.remove("hidden");
+      updateAirportApproachVisibility();
+      updateViewModeButton();
+      publishOperations();
+      void refreshNearbyArrivals();
+      return home;
+    }
+    scheduleTab.hidden = false;
+    liveTab.textContent = "AO VIVO";
     const manuallySelected =
       selectedAirportCode === "AUTO"
         ? null
@@ -1524,8 +1509,6 @@ export function startAirviewer() {
       airportCamera.classList.add("hidden");
       cameraToggle.classList.add("hidden");
       airportCameraFrame.removeAttribute("src");
-      airportCameraExtraFrame.removeAttribute("src");
-      airportCameraExtraFeed.classList.add("hidden");
       clearNearbyArrivals();
       updateAirportApproachVisibility();
       updateViewModeButton();
@@ -1535,14 +1518,13 @@ export function startAirviewer() {
     const cameraChanged =
       !activeAirportCamera || activeAirportCamera.code !== nearbyCamera.code;
     if (cameraChanged) {
+      towerRunway = null;
       if (activeAirportCamera) clearNearbyArrivals();
       activeAirportCamera = nearbyCamera;
       airportOverviewMode = !aircraft3dEnabled || !trackedAircraftHex;
       cameraDismissed = false;
       lastArrivalsFetch = 0;
       airportCameraFrame.removeAttribute("src");
-      airportCameraExtraFrame.removeAttribute("src");
-      airportCameraExtraFeed.classList.add("hidden");
     } else {
       activeAirportCamera = nearbyCamera;
     }
@@ -1567,10 +1549,9 @@ export function startAirviewer() {
       airportCamera.classList.add("hidden");
       cameraToggle.classList.add("hidden");
       airportCameraFrame.removeAttribute("src");
-      airportCameraExtraFrame.removeAttribute("src");
-      airportCameraExtraFeed.classList.add("hidden");
     } else if (cameraDismissed) cameraToggle.classList.remove("hidden");
     else showAirportCamera();
+    publishOperations();
     void refreshNearbyArrivals();
     void refreshAirportSchedule(cameraChanged);
     return activeAirportCamera;
@@ -1623,11 +1604,17 @@ export function startAirviewer() {
   }
 
   function airportCameraView(airport: Airport): maplibregl.CameraOptions {
+    const runway = towerRunway && RUNWAYS.find(row => row.airport === airport.code && row.ends.join("/") === towerRunway);
+    if (runway) {
+      const [start, end] = runway.coordinates;
+      return { center: [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2], zoom: 14.5,
+        pitch: 68, bearing: (runwayBearing(start, end) + 90) % 360 };
+    }
     return {
       center: [airport.lon, airport.lat],
-      zoom: airportCenterZoom,
+      zoom: airport.code === "CASA" ? 12 - Math.log2(airport.radiusKm / 5) : airportCenterZoom,
       bearing: manualMapBearing ?? 0,
-      pitch: 45,
+      pitch: airport.code === "CASA" ? 55 : 45,
     };
   }
 
@@ -1666,7 +1653,8 @@ export function startAirviewer() {
   }
 
   function updateViewModeButton() {
-    recenterButton.textContent =
+    airportViewSwitch.textContent = getRadarOrigin() ? "Minha casa" : "Aeroporto";
+    recenterButton.textContent = towerRunway ? "Recentrar torre" : getRadarOrigin() ? "Centralizar minha casa" :
       aircraft3dEnabled && trackedAircraftHex
         ? "Recentrar aeronave"
         : "Centralizar aeroporto";
@@ -1696,6 +1684,9 @@ export function startAirviewer() {
   function setViewMode(airportMode: boolean, animate: boolean) {
     if (airportMode && !activeAirportCamera) return;
     if (!airportMode && (!aircraft3dEnabled || !trackedAircraftHex)) return;
+    towerRunway = null;
+    publishOperations();
+    redrawAirportTraffic();
     airportOverviewMode = airportMode;
     zoomControl.value = String(airportOverviewMode ? panoramaZoom : cameraZoom);
     showZoomValue();
@@ -1704,10 +1695,10 @@ export function startAirviewer() {
   }
 
   function fitAirportTraffic(animate: boolean) {
-    const selectedAirport =
+    const selectedAirport = homeAirport() || (
       selectedAirportCode !== "AUTO"
         ? airports.find((airport) => airport.code === selectedAirportCode)
-        : activeAirportCamera;
+        : activeAirportCamera);
     if (!map || !selectedAirport) return false;
     if (
       !activeAirportCamera ||
@@ -1715,7 +1706,7 @@ export function startAirviewer() {
     ) {
       activeAirportCamera = selectedAirport;
     }
-    panoramaZoom = airportCenterZoom;
+    panoramaZoom = Number(airportCameraView(selectedAirport).zoom);
     zoomControl.value = String(panoramaZoom);
     showZoomValue();
     storeNumber("aircraft-3d-panorama-zoom", panoramaZoom);
@@ -1825,6 +1816,7 @@ export function startAirviewer() {
           isTracked:
             state.hex === String(trackedAircraftHex || "").toLowerCase(),
           track: position.track,
+          towerFocus: !towerRunway || (state.distance < 12 && state.altitude < (activeAirportCamera?.elevationFeet || 0) + 8000),
           scale: aircraftIconScale(state.type),
           icon: `${movement === "overflight" ? "nearby" : movement}-${aircraftIconKind(state.type)}`,
           verticalIndicator: vertical.symbol,
@@ -2173,6 +2165,13 @@ export function startAirviewer() {
           },
         });
 
+        map.addSource("home-radar-rings", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+        map.addLayer({ id: "home-radar-rings-line", type: "line", source: "home-radar-rings", filter: ["==", ["geometry-type"], "LineString"],
+          paint: { "line-color": "#38bdf8", "line-width": 2, "line-opacity": 0.8, "line-dasharray": [3, 3] } });
+        map.addLayer({ id: "home-radar-rings-label", type: "symbol", source: "home-radar-rings", filter: ["==", ["geometry-type"], "Point"],
+          layout: { "text-field": ["get", "label"], "text-size": 13, "text-allow-overlap": true },
+          paint: { "text-color": "#e0f2fe", "text-halo-color": "#07111f", "text-halo-width": 2 } });
+        updateHomeRadarLayers();
         map.addSource("airport-arrivals", {
           type: "geojson",
           data: { type: "FeatureCollection", features: [] },
@@ -2194,6 +2193,7 @@ export function startAirviewer() {
           type: "symbol",
           source: "airport-arrivals",
           filter: ["!=", ["get", "isTracked"], true],
+          paint: { "icon-opacity": ["case", ["boolean", ["get", "towerFocus"], true], 1, 0.3] },
           layout: {
             "icon-image": ["get", "icon"],
             "icon-size": nightMode
@@ -2352,6 +2352,7 @@ export function startAirviewer() {
       recenter(false);
       status.textContent = trackedAircraftHex
         ? "3D livre ativo | acompanhando ADS-B"
+        : getRadarOrigin() ? "Radar da minha casa ativo"
         : `Visao panoramica - ${activeAirportCamera ? activeAirportCamera.code : selectedAirportCode}`;
       void refreshNearbyArrivals();
       void refreshAirportSchedule(true);
@@ -2426,7 +2427,7 @@ export function startAirviewer() {
       const mapPosition = center
         ? ` | visao a frente ${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`
         : "";
-      status.textContent = `3D livre ativo | atualizado ${new Date().toLocaleTimeString("pt-BR")}${mapPosition}`;
+      status.textContent = `${towerRunway ? `Torre virtual ${activeAirportCamera?.code} · ${towerRunway}` : "3D livre ativo"} | atualizado ${new Date().toLocaleTimeString("pt-BR")}${towerRunway ? "" : mapPosition}`;
     } catch (error) {
       if (lifecycle.signal.aborted) return;
       if (trackedAircraftHex.toLowerCase() === hex) {
@@ -2563,6 +2564,9 @@ export function startAirviewer() {
     "change",
     () => {
       selectedAirportCode = airportSelect.value;
+      towerRunway = null;
+      regionGeneration++;
+      if (getRadarOrigin()) setRadarOrigin(null);
       clearNearbyArrivals();
       activeAirportCamera = null;
       cameraDismissed = false;
@@ -2622,6 +2626,66 @@ export function startAirviewer() {
   restartRefreshTimer();
   restartAirportTrafficTimer();
   nightModeTimer = setInterval(updateNightMode, 60000);
+
+  const unsubscribeHomeRadar = subscribeRadarOrigin(() => {
+    towerRunway = null;
+    regionGeneration++;
+    clearNearbyArrivals();
+    lastArrivalsFetch = 0;
+    lastScheduleRender = 0;
+    lastScheduleFlights = [];
+    activeAirportCamera = null;
+    enterAirportPanorama(getRadarOrigin() ? "CASA" : selectedAirportCode);
+    updateAirportCamera();
+    updateHomeRadarLayers();
+    const home = getRadarOrigin();
+    document.body.dataset.homeRadar = String(Boolean(home));
+    if (home) {
+      if (!airportSelect.querySelector('option[value="CASA"]')) {
+        const option = new Option("Minha casa", "CASA");
+        option.disabled = true;
+        airportSelect.add(option);
+      }
+      airportSelect.value = "CASA";
+      routeElement.textContent = `RADAR DA MINHA CASA | ${home.radius_km} km`;
+      element("aircraft-identity").textContent = "TRÁFEGO AO REDOR DE CASA";
+      modeEyebrow.textContent = "MAPA 3D | ANÉIS DE DISTÂNCIA";
+      status.textContent = "Radar de casa ativo | buscando aeronaves";
+    } else {
+      airportSelect.querySelector('option[value="CASA"]')?.remove();
+      airportSelect.value = selectedAirportCode;
+      setTrafficPanelMode("schedule");
+    }
+    document.querySelectorAll<HTMLElement>(".traffic-legend span").forEach(node => {
+      const labels: Record<string, string> = home ? { Chegada: "Aproximando", Saida: "Afastando", Local: "Na região" } : { Aproximando: "Chegada", Afastando: "Saida", "Na região": "Local" };
+      const text = Array.from(node.childNodes).find(child => child.nodeType === Node.TEXT_NODE && child.textContent?.trim());
+      if (text?.textContent && labels[text.textContent.trim()]) text.textContent = labels[text.textContent.trim()];
+    });
+    recenter(true);
+    if (mobileViewport.matches) setMobileView("map", false);
+  });
+
+  const unsubscribeAirportCommands = subscribeAirportCommands(command => {
+    if (command.type === "airport") {
+      airportSelect.value = command.code;
+      airportSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    } else if (command.type === "tower") {
+      if (!activeAirportCamera || !["GRU", "GIG"].includes(activeAirportCamera.code)) return;
+      if (command.runway && !RUNWAYS.some(row => row.airport === activeAirportCamera!.code && row.ends.join("/") === command.runway)) return;
+      towerRunway = command.runway;
+      airportOverviewMode = true;
+      manualMapBearing = null;
+      updateViewModeButton();
+      publishOperations();
+      redrawAirportTraffic();
+      recenter(true);
+      status.textContent = towerRunway ? `Torre virtual ${activeAirportCamera.code} | pista ${towerRunway}` : `Visão geral ${activeAirportCamera.code}`;
+    } else {
+      const aircraft = lastAirportTraffic.find(row => row.hex === command.hex);
+      if (aircraft && activeAirportCamera) selectLiveMovement(aircraft, activeAirportCamera, !towerRunway);
+    }
+    if (mobileViewport.matches) setMobileView("map", false);
+  });
 
   let favoriteRequest = 0;
   const unsubscribeSavedAircraft = subscribeSavedAircraft(async (saved) => {
@@ -2707,6 +2771,11 @@ export function startAirviewer() {
   return () => {
     lifecycle.abort();
     unsubscribeSavedAircraft();
+    unsubscribeHomeRadar();
+    unsubscribeAirportCommands();
+    delete document.documentElement.dataset.airportView;
+    homeMarker?.remove();
+    delete document.body.dataset.homeRadar;
     selectAircraft(null);
     clearInterval(refreshTimer);
     clearInterval(airportTrafficTimer);
@@ -2716,7 +2785,6 @@ export function startAirviewer() {
     controlsObserver.disconnect();
     document.documentElement.style.removeProperty("--controls-height");
     airportCameraFrame.removeAttribute("src");
-    airportCameraExtraFrame.removeAttribute("src");
     mobileDestinations.forEach(({ element: node, placeholder }) => {
       placeholder.after(node);
       placeholder.remove();

@@ -11,7 +11,8 @@
     "test": "playwright test",
     "schedule": "node scripts/update-schedule.mjs",
     "test:db": "node scripts/test-favorites-db.mjs",
-    "build:test": "vite build --outDir ../.test-dist --mode test"
+    "build:test": "vite build --outDir ../.test-dist --mode test",
+    "weather": "node scripts/update-weather.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",

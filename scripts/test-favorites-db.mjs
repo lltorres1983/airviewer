@@ -55,10 +55,12 @@ try {
     bootstrap,
     resolve("supabase/migrations/20261111000000_aircraft_favorites.sql"),
     resolve("supabase/tests/aircraft_favorites.sql"),
+    resolve("supabase/migrations/20261112000000_home_radar.sql"),
+    resolve("supabase/tests/home_radar.sql"),
   ])
     run("psql", ["-v", "ON_ERROR_STOP=1", "-q", "-f", file]);
   console.log(
-    "Banco validado: favoritos privados, permissões, unicidade e exclusão da conta.",
+    "Banco validado: favoritos e radar privados, permissões, validação e exclusão da conta.",
   );
 } finally {
   if (started) run("pg_ctl", ["-D", data, "-m", "immediate", "-w", "stop"]);

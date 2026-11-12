@@ -1,0 +1,31 @@
+import { test, expect } from '@playwright/test';
+import { fixtures } from './fixtures';
+
+test('câmera única troca a transmissão e o vídeo acompanha o redimensionamento', async ({ page }) => {
+  test.setTimeout(60000);
+  await fixtures(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  const panel = page.locator('#airport-camera');
+  const frame = panel.locator('iframe');
+  await expect(panel).toBeVisible();
+  await expect(frame).toHaveCount(1);
+  const source = await frame.getAttribute('src');
+  await page.locator('#airport-camera-source').selectOption('golf-live');
+  await expect(frame).not.toHaveAttribute('src', source!);
+  const before = (await frame.boundingBox())!;
+  const handle = page.getByRole('button', { name: 'Redimensionar câmera', exact: true });
+  await handle.focus();
+  await page.keyboard.press('Shift+ArrowUp');
+  await expect.poll(async () => Math.round((await frame.boundingBox())!.height)).toBe(Math.round(before.height) + 40);
+  await page.keyboard.press('Shift+ArrowRight');
+  await expect.poll(async () => Math.round((await frame.boundingBox())!.width)).toBe(Math.round(before.width) + 40);
+  await panel.screenshot({ path: 'test-results/camera-desktop.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('#mobile-menu-toggle').click();
+  await page.getByRole('button', { name: 'Câmera do aeroporto', exact: true }).click();
+  await expect(frame).toBeVisible();
+  const mobile = (await frame.boundingBox())!;
+  expect(mobile.width / mobile.height).toBeCloseTo(16 / 9, 1);
+  await panel.screenshot({ path: 'test-results/camera-mobile.png' });
+});

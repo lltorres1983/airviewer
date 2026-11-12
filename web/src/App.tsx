@@ -1,3 +1,5 @@
+import { AirportSpotting } from "@/components/airport-spotting";
+import { HomeRadarTrigger } from "@/components/home-radar-panel";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AccountPanel, AccountTrigger } from "@/components/account-panel";
@@ -165,19 +167,6 @@ export default function App() {
               allowFullScreen
             ></iframe>
           </div>
-          <div
-            id="airport-camera-extra-feed"
-            className="airport-camera-feed hidden"
-          >
-            <strong id="airport-camera-extra-title">CAMERA 2</strong>
-            <iframe
-              id="airport-camera-extra-frame"
-              title="Segunda camera ao vivo do aeroporto"
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            ></iframe>
-          </div>
         </div>
         <div id="airport-camera-note" className="airport-camera-note">
           Se aparecer “vídeo não disponível”, o YouTube bloqueou esta
@@ -320,6 +309,8 @@ export default function App() {
         >
           Camera aeroporto
         </Button>
+        <HomeRadarTrigger />
+        <AirportSpotting />
         <Button variant="secondary" id="show-diagnostics" type="button">
           Diagnostico
         </Button>

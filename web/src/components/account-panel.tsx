@@ -1,3 +1,4 @@
+import { HomeRadarPanel } from "./home-radar-panel";
 import { Dialog } from "radix-ui";
 import { Button } from "./ui/button";
 import { useAccount } from "@/providers/account-provider";
@@ -123,8 +124,7 @@ export function AccountPanel() {
               </Dialog.Close>
             </div>
             <Dialog.Description className="account-description">
-              Salve suas aeronaves e acesse seus favoritos em outros
-              dispositivos.
+              Salve suas aeronaves e configure o radar da sua casa para acessar em outros dispositivos.
             </Dialog.Description>
             {account.authError && (
               <p className="account-error" role="alert">
@@ -141,7 +141,7 @@ export function AccountPanel() {
             ) : !account.session ? (
               <div className="account-signin">
                 <p>
-                  Entre com Google para salvar favoritos. Sua conta é criada no
+                  Entre com Google para salvar favoritos e configurar seu radar. Sua conta é criada no
                   primeiro acesso.
                 </p>
                 <Button
@@ -175,6 +175,7 @@ export function AccountPanel() {
                     {account.authBusy ? "Saindo…" : "Sair"}
                   </Button>
                 </div>
+                <HomeRadarPanel key={account.session.user.id} />
                 <section
                   className="favorites-section"
                   aria-labelledby="favorites-title"

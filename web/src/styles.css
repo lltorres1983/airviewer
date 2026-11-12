@@ -1215,8 +1215,8 @@ button {
 .airport-camera { position: fixed; z-index: 8; left: 16px; bottom: 110px; display: flex; flex-direction: column; width: var(--panel-width, 420px); height: var(--panel-height, 270px); max-width: calc(100vw - 32px); max-height: calc(100dvh - 200px); min-width: 300px; min-height: 180px; overflow: hidden; color: #e5eef8; background: rgba(4, 15, 27, .96); border: 1px solid #38bdf8; border-radius: 6px; box-shadow: 0 14px 38px rgba(0, 0, 0, .48); }
 .airport-camera-header { display: flex; flex-shrink: 0; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 40px; padding: 7px 30px 7px 12px; }
 .airport-camera-source { min-width: 0; max-width: 190px; padding: 4px 6px; color: #e0f2fe; background: #10273b; border: 1px solid #38bdf8; border-radius: 4px; font: inherit; font-size: 11px; }
-.airport-camera-video-grid { display: grid; flex: 1; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #000; }
-.airport-camera-feed { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: #000; }
+.airport-camera-video-grid { display: grid; flex: 1; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 4px; padding: 4px; background: #000; }
+.airport-camera-feed { position: relative; min-width: 0; min-height: 0; aspect-ratio: auto; overflow: hidden; background: #000; }
 .airport-camera-note { flex-shrink: 0; max-height: 70px; overflow: auto; padding: 6px 9px; color: #bae6fd; background: #0b2034; border-top: 1px solid rgba(56, 189, 248, .32); font-size: 10px; line-height: 1.35; }
 .right-rail { position: fixed; z-index: 8; top: 92px; right: 58px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; width: max-content; max-width: calc(100vw - 116px); max-height: calc(100dvh - 210px); pointer-events: none; }
 .schedule-source { display: block; flex-shrink: 0; padding: 6px 10px 6px 30px; color: #cbd5e1; font-size: 10px; }
@@ -1284,3 +1284,53 @@ label:has(#camera-size-control), #camera-toggle { display: none !important; }
 /* Stable React insertion point beside panels moved by the mobile controller. */
 .aircraft-details-slot { display: contents; }
 .aircraft-details { flex-shrink: 0; }
+
+.home-radar-settings { margin: 20px 0; padding: 16px 0; border-block: 1px solid var(--border); }
+.home-radar-settings h2 { margin: 0 0 8px; font-size: 18px; font-weight: 700; }
+.home-radar-settings p { margin: 8px 0 12px; font-size: 13px; line-height: 1.5; }
+.home-radar-settings fieldset { display: grid; gap: 10px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.home-radar-settings label { display: grid; gap: 6px; font-size: 13px; }
+.home-radar-settings input, .home-radar-settings select { width: 100%; min-width: 0; min-height: 42px; padding: 8px 10px; color: #e0f2fe; background: #10273b; border: 1px solid #52738d; border-radius: 6px; font: inherit; }
+.home-radar-settings input:focus-visible, .home-radar-settings select:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+.home-radar-coordinates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.home-radar-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.home-radar-hint { color: #bacddd; }
+.home-radar-marker { width: 10px; height: 10px; background: #7dd3fc; border: 2px solid #e0f2fe; border-radius: 50%; pointer-events: none; }
+.home-radar-marker span { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); padding: 4px 8px; white-space: nowrap; color: #07111f; background: #7dd3fc; border-radius: 6px; font-size: 12px; font-weight: 700; }
+
+body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
+
+.spotting-panel { position: fixed; z-index: 19; left: 16px; top: 100px; bottom: calc(var(--controls-height, 100px) + 32px); width: min(390px, calc(100vw - 32px)); overflow-y: auto; overscroll-behavior: contain; padding: 18px; color: #e0f2fe; background: #071521; border: 1px solid #52738d; border-radius: 12px; box-shadow: 0 12px 28px #0006; font-size: 13px; line-height: 1.5; }
+.spotting-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.spotting-heading h2 { font-size: 20px; font-weight: 700; }
+.spotting-panel h3 { margin: 0 0 8px; font-size: 16px; font-weight: 700; }
+.spotting-panel p { margin: 8px 0 12px; color: #c4d9e8; }
+.spotting-panel section { padding-top: 16px; margin-top: 16px; border-top: 1px solid #365269; }
+.spotting-airports { display: flex; gap: 8px; margin-top: 16px; }
+.spotting-airports button { flex: 1; }
+.spotting-airports button[aria-pressed="true"] { color: #07111f; background: #7dd3fc; }
+.spotting-panel label { display: block; margin: 10px 0 5px; }
+.spotting-panel input:not([type="checkbox"]), .spotting-panel select { display: block; width: 100%; min-height: 42px; padding: 8px; color: #e0f2fe; background: #10273b; border: 1px solid #52738d; border-radius: 6px; font: inherit; }
+.spotting-panel :is(input, select, button, summary):focus-visible { outline: 2px solid #7dd3fc; outline-offset: 3px; }
+.spotting-panel .spotting-check { display: flex; align-items: center; gap: 8px; min-height: 42px; }
+.spotting-panel input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; accent-color: #7dd3fc; }
+.spotting-panel a { color: #7dd3fc; text-decoration: underline; }
+.spotting-panel summary { cursor: pointer; padding: 8px 0; }
+.approach-queue { list-style: decimal; padding-left: 24px; margin: 12px 0; }
+.approach-queue li { padding: 4px 0; border-bottom: 1px solid #263c4e; }
+.approach-queue button { display: flex; flex-direction: column; width: 100%; gap: 3px; text-align: left; padding: 8px; border-radius: 6px; }
+.approach-queue button:hover { background: #10273b; }
+.approach-queue small { color: #b8d9ec; }
+.weather-raw { overflow-wrap: anywhere; font-family: monospace; }
+.weather-forecast > div { padding: 8px 0; border-bottom: 1px solid #263c4e; }
+.spotting-panel .spotting-warning { color: #fde68a; }
+.spotting-alerts { margin: 12px 0; padding-left: 18px; }
+.spotting-alerts li { margin-bottom: 8px; }
+.spotting-notice { position: fixed; z-index: 18; top: 190px; left: 16px; display: flex; gap: 12px; max-width: min(420px, calc(100vw - 32px)); padding: 12px; color: #e0f2fe; background: #10273b; border: 1px solid #7dd3fc; border-radius: 8px; font-size: 13px; }
+.spotting-notice button { text-align: left; }
+.spotting-notice span { display: block; margin-top: 4px; color: #7dd3fc; }
+@media (max-width: 900px) {
+  .spotting-panel { inset: 70px 8px 64px; width: auto; padding: 16px; }
+  .spotting-panel button, .spotting-panel summary { min-height: 44px; }
+  .spotting-notice { top: 90px; left: 8px; max-width: calc(100vw - 16px); }
+}

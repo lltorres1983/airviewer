@@ -23,9 +23,6 @@ interface Elements {
   "airport-camera-close": HTMLButtonElement;
   "airport-camera-feed-title": HTMLElement;
   "airport-camera-frame": HTMLIFrameElement;
-  "airport-camera-extra-feed": HTMLDivElement;
-  "airport-camera-extra-title": HTMLElement;
-  "airport-camera-extra-frame": HTMLIFrameElement;
   "airport-camera-note": HTMLDivElement;
   "airport-select": HTMLSelectElement;
   "refresh-interval": HTMLSelectElement;
