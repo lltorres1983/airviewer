@@ -541,6 +541,7 @@ export function startAirviewer() {
     element("aircraft-identity").textContent = "VISAO PANORAMICA DO AEROPORTO";
     element("telemetry").classList.add("hidden");
     if (trackedMarkerElement) trackedMarkerElement.style.display = "none";
+    redrawAirportTraffic();
     zoomControl.value = String(panoramaZoom);
     showZoomValue();
     status.textContent = `Visao panoramica - ${airportCode}`;
@@ -927,6 +928,7 @@ export function startAirviewer() {
     updateTelemetry();
     updateAirportCamera();
     updateTrail();
+    redrawAirportTraffic();
     updateViewModeButton();
     status.textContent = `Acompanhando ${aircraft.flight} pelo ADS-B`;
     if (activeAirportCamera?.code === airport.code) {
@@ -953,6 +955,7 @@ export function startAirviewer() {
     selectAircraft(null);
     trackedAircraftHex = "";
     if (trackedMarkerElement) trackedMarkerElement.style.display = "none";
+    redrawAirportTraffic();
     element("telemetry").classList.add("hidden");
     selectedMovementFlight = flight.flight;
     const selectedRoute = movementRoute(flight, airport);
@@ -2190,6 +2193,7 @@ export function startAirviewer() {
           id: "airport-arrivals-points",
           type: "symbol",
           source: "airport-arrivals",
+          filter: ["!=", ["get", "isTracked"], true],
           layout: {
             "icon-image": ["get", "icon"],
             "icon-size": nightMode
@@ -2205,7 +2209,11 @@ export function startAirviewer() {
           id: "airport-arrivals-vertical-rate",
           type: "symbol",
           source: "airport-arrivals",
-          filter: ["!=", ["get", "verticalIndicator"], ""],
+          filter: [
+            "all",
+            ["!=", ["get", "isTracked"], true],
+            ["!=", ["get", "verticalIndicator"], ""],
+          ],
           layout: {
             "text-field": ["get", "verticalIndicator"],
             "text-size": 20,
@@ -2233,6 +2241,7 @@ export function startAirviewer() {
           id: "airport-arrivals-labels",
           type: "symbol",
           source: "airport-arrivals",
+          filter: ["!=", ["get", "isTracked"], true],
           layout: {
             "text-field": ["get", "label"],
             "text-size": [
@@ -2622,6 +2631,7 @@ export function startAirviewer() {
     pendingFlightSelection = null;
     element("telemetry").classList.add("hidden");
     if (trackedMarkerElement) trackedMarkerElement.style.display = "none";
+    redrawAirportTraffic();
     selectAircraft({ ...saved, flight: "", routeHint: "" });
     rightRail.scrollTop = 0;
     routeElement.textContent = "ROTA NÃO INFORMADA";
