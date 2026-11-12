@@ -327,3 +327,10 @@ com crédito ao fotógrafo e link para a imagem original no Planespotters. Sem
 matrícula, foto disponível ou imagem válida, o voo permanece visível com “Sem
 foto”. As consultas são canceladas ao retirar o candidato e usam cache limitado
 em memória para evitar consultas repetidas ao movimentar o celular.
+
+A tela inicial inclui um radar compacto de 20 km. A localização só é solicitada
+ao ativar; não é salva no perfil. O painel permite atualizar a posição, recolher
+(interrompendo as consultas e desmontando o mapa) e abrir o dashboard com a mesma
+posição em memória. As camadas e a legenda ficam em detalhes expansíveis.
+No celular, o painel fica acima da navegação e cede espaço aos detalhes da
+aeronave selecionada ou ao menu aberto.

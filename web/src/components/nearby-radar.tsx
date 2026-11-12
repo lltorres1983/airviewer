@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dialog } from 'radix-ui';
 import { Button } from './ui/button';
 import { LocalWeather } from './local-weather';
@@ -8,6 +8,7 @@ import { useCurrentLocation, getCameraOrigin, setCameraOrigin } from '@/lib/use-
 
 export function NearbyRadar() {
   const [open, setOpen] = useState(window.location.hash === '#/radar');
+  useEffect(() => { const show = () => { window.location.hash = '/radar'; setOpen(true); }; window.addEventListener('airviewer:open-nearby', show); return () => window.removeEventListener('airviewer:open-nearby', show); }, []);
   const trigger = useRef<HTMLButtonElement>(null);
   return <Dialog.Root open={open} onOpenChange={next => { setOpen(next); if (!next && window.location.hash === '#/radar') window.location.hash = '/'; }}>
     <Dialog.Trigger asChild><Button ref={trigger} variant="secondary">Radar perto de mim</Button></Dialog.Trigger>

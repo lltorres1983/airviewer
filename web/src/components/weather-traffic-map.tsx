@@ -23,7 +23,7 @@ function frameRadar(map: maplibregl.Map, origin: Observer, radius: number) {
   const delta = radius / 111.32, horizontal = delta / Math.max(.09, Math.cos(origin.latitude * Math.PI / 180));
   map.fitBounds([[origin.longitude - horizontal, origin.latitude - delta], [origin.longitude + horizontal, origin.latitude + delta]], { padding: 35, duration: 0, maxZoom: 12 });
 }
-export function WeatherTrafficMap({ origin, aircraft, radius, selected, onSelect, now }: { origin: Observer; aircraft: NearbyAircraft[]; radius: number; selected: string; onSelect: (hex: string) => void; now: number }) {
+export function WeatherTrafficMap({ origin, aircraft, radius, selected, onSelect, now, compact = false }: { compact?: boolean; origin: Observer; aircraft: NearbyAircraft[]; radius: number; selected: string; onSelect: (hex: string) => void; now: number }) {
   const container = useRef<HTMLDivElement>(null), map = useRef<maplibregl.Map | null>(null);
   const latest = useRef({ origin, aircraft, radius, selected, onSelect }); latest.current = { origin, aircraft, radius, selected, onSelect };
   const [ready, setReady] = useState(false), [mapError, setMapError] = useState('');
@@ -118,10 +118,11 @@ export function WeatherTrafficMap({ origin, aircraft, radius, selected, onSelect
     for (const id of ['weather-cloud', 'weather-rain', 'weather-coverage']) if (instance.getLayer(id)) instance.moveLayer(id, before);
   }, [ready, freshRain, freshCloud, showCloud, showRain, showCoverage, cloudOpacity, rainOpacity, tileErrors]);
   const stamp = (time: number) => new Date(time).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-  return <section className="weather-traffic" aria-label="Radar meteorológico e aeronaves">
+  return <section className={`weather-traffic${compact ? ' weather-traffic-compact' : ''}`} aria-label="Radar meteorológico e aeronaves">
     <div className="weather-layer-controls"><label><input type="checkbox" checked={showCloud} onChange={e => setShowCloud(e.target.checked)} />Nuvens · satélite</label><label><input type="checkbox" checked={showRain} onChange={e => setShowRain(e.target.checked)} />Precipitação</label><label><input type="checkbox" checked={showCoverage} onChange={e => setShowCoverage(e.target.checked)} />Limites de cobertura</label></div>
     <div ref={container} className="weather-traffic-map" aria-label="Mapa de nuvens, precipitação e aeronaves" data-clouds={showCloud && !!freshCloud && !tileErrors['weather-cloud']} data-rain={showRain && !!freshRain && !tileErrors['weather-rain']} />
     {mapError && <p role="alert">{mapError}</p>}
+    <details className="weather-details" open={compact ? undefined : true}><summary>{compact && (rainError || cloudError || Object.keys(tileErrors).length) ? 'Camada indisponível · detalhes' : 'Camadas e legenda'}</summary>
     <div className="weather-map-settings"><div className="weather-opacity"><label>Opacidade das nuvens<input aria-label="Opacidade das nuvens" type="range" min="0" max="1" step=".1" value={cloudOpacity} onChange={e => setCloudOpacity(Number(e.target.value))} /></label><label>Opacidade da precipitação<input aria-label="Opacidade da precipitação" type="range" min="0" max="1" step=".1" value={rainOpacity} onChange={e => setRainOpacity(Number(e.target.value))} /></label></div>
     <div className="weather-layer-times"><p>{freshCloud ? `Satélite · captura ${stamp(freshCloud.time)}` : !inCloudArea ? 'GOES-East não cobre esta localização.' : cloudError || (loading ? 'Consultando satélite…' : 'Sem imagem recente de nuvens.')}</p><p>{freshRain ? `Precipitação · composição ${stamp(freshRain.time)}` : rainError || (loading ? 'Consultando precipitação…' : 'Sem composição recente de precipitação.')}</p><button disabled={loading} onClick={() => setRevision(n => n + 1)}>{loading ? 'Atualizando camadas…' : 'Atualizar camadas'}</button></div>
     </div>
@@ -129,5 +130,6 @@ export function WeatherTrafficMap({ origin, aircraft, radius, selected, onSelect
     <div className="precipitation-legend" aria-label="Legenda de refletividade da precipitação em dBZ"><span>Refletividade (dBZ)</span>{[[15, '#88ddee'], [20, '#00a3e0'], [30, '#005588'], [35, '#ffee00'], [40, '#ffaa00'], [45, '#ff4400']].map(([number, color]) => <span key={number}><i style={{ background: String(color) }} />{number}</span>)}</div>
     <details className="weather-map-notes"><summary>Como interpretar as camadas</summary><p className="observatory-note">Horários do dispositivo. Nuvens: imagem GeoColor de satélite, que também mostra a superfície. Áreas escurecidas: fora da cobertura de precipitação. Sem manchas não garante ausência de chuva. As camadas têm resolução regional; ampliar não acrescenta detalhes meteorológicos. Aeronaves atualizadas separadamente dentro do círculo de {radius} km.</p>
     <p className="observatory-note">Fontes: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener noreferrer">RainViewer</a> · <a href={CLOUD_SERVICE} target="_blank" rel="noopener noreferrer">NOAA GOES-East</a>.</p></details>
+    </details>
   </section>;
 }

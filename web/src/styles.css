@@ -1564,3 +1564,43 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
 @media(max-width: 560px) { .observatory-panel.nearby-panel { inset: 0; border: 0; border-radius: 0; padding: max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom)); } .nearby-panel .observatory-header h2 { font-size: 22px; } .nearby-panel > .observatory-header { gap: 12px; margin-bottom: 20px; } .nearby-location-bar { padding: 16px; } .nearby-location-actions { width: 100%; justify-content: space-between; gap: 12px; } .nearby-location-actions button { flex: 1; font-size: 12px; padding: 8px; } .nearby-dashboard-sidebar { grid-template-columns: minmax(0, 1fr); } .nearby-map-card .weather-traffic-map { height: 420px; } .nearby-card-heading { align-items: start; } .nearby-map-empty { min-height: 300px; padding: 20px; } }
 .nearby-map-card .maplibregl-ctrl-bottom-right, .nearby-map-card .maplibregl-ctrl-bottom-left { bottom: 0; }
 .nearby-map-card .maplibregl-ctrl-attrib { font-size: 10px; line-height: 1.5; }
+
+/* The home radar shares the weather map, with progressive disclosure. */
+.right-rail { overflow-y: auto; scrollbar-width: thin; scrollbar-color: #49637a #071521; }
+.mini-nearby { width: 300px; max-width: 100%; flex-shrink: 0; padding: 12px; color: #e0f2fe; background: #0b1c2b; border: 1px solid #36516b; border-radius: 12px; pointer-events: auto; }
+.mini-nearby header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mini-nearby h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.mini-nearby p { margin: 10px 0; font-size: 12px; line-height: 1.5; }
+.mini-nearby button { min-height: 40px; padding: 6px 8px; border: 1px solid #49637a; border-radius: 6px; background: #152b40; color: #dff5ff; font: inherit; font-size: 11px; cursor: pointer; }
+.mini-nearby button:hover { background: #23465d; }
+.mini-nearby button:disabled { opacity: .6; cursor: wait; }
+.mini-nearby header button { border: 0; background: transparent; }
+.mini-nearby-actions { display: flex; gap: 8px; justify-content: space-between; }
+.mini-nearby small, .mini-nearby-status { color: #bdcedd; font-size: 11px; }
+.mini-nearby > small { display: block; margin-top: 10px; }
+.mini-nearby a { color: #7ee8ff; }
+.mini-nearby .weather-traffic-map { height: 210px; margin-top: 8px; border-radius: 6px; }
+.mini-nearby .maplibregl-ctrl-top-right { top: 0; }
+.mini-nearby .maplibregl-ctrl-bottom-right, .mini-nearby .maplibregl-ctrl-bottom-left { bottom: 0; }
+.mini-nearby .maplibregl-ctrl-attrib { font-size: 9px; line-height: 1.4; }
+.weather-details { display: contents; }
+.weather-details > summary { display: none; }
+.weather-traffic-compact > .weather-layer-controls { display: none; }
+.weather-traffic-compact .weather-details { display: block; }
+.weather-traffic-compact .weather-details > summary { display: list-item; min-height: 36px; align-content: center; cursor: pointer; font-size: 11px; color: #bdcedd; }
+.weather-traffic-compact .weather-map-settings { display: block; padding: 8px 0; }
+.weather-traffic-compact .weather-opacity { gap: 8px; }
+.weather-traffic-compact .weather-opacity label, .weather-traffic-compact .weather-layer-times p { font-size: 11px; }
+.weather-traffic-compact .precipitation-legend { font-size: 10px; gap: 6px; }
+.weather-traffic-compact .weather-map-notes p { font-size: 11px; }
+@media(max-width: 900px) {
+  .right-rail { display: flex; top: auto; bottom: calc(112px + env(safe-area-inset-bottom)); right: 12px; left: auto; width: 256px; max-width: calc(100vw - 24px); max-height: 50dvh; }
+  .right-rail > :not(.mini-nearby):not(.aircraft-details-slot) { display: none; }
+  .right-rail:has(.aircraft-details) > .mini-nearby { display: none; }
+  .mini-nearby { width: 100%; }
+  .mini-nearby .weather-traffic-map { height: 180px; }
+  .mini-nearby button { min-height: 44px; }
+}
+@media(min-width: 901px) { .right-rail { max-height: calc(100dvh - var(--controls-height, 100px) - 124px); } }
+.mini-nearby .weather-traffic-map { height: 180px; }
+@media(max-width: 900px) { .mini-nearby .weather-traffic-map { height: 160px; } }
