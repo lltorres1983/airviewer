@@ -304,7 +304,7 @@ body,
 }
 .arrivals-list,
 .schedule-list {
-  max-height: 190px;
+  max-height: none;
   overflow: auto;
 }
 .arrival-row {
@@ -1221,7 +1221,7 @@ button {
 .right-rail { position: fixed; z-index: 8; top: 92px; right: 58px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; width: max-content; max-width: calc(100vw - 116px); max-height: calc(100dvh - 210px); pointer-events: none; }
 .schedule-source { display: block; flex-shrink: 0; padding: 6px 10px 6px 30px; color: #cbd5e1; font-size: 10px; }
 .arrivals-list, .schedule-list { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
-.arrivals-panel { position: relative; display: flex; flex-direction: column; width: var(--panel-width, 414px); height: var(--panel-height, 330px); max-width: calc(100vw - 116px); min-height: 220px; }
+.arrivals-panel { position: relative; display: flex; flex-direction: column; width: var(--panel-width, 414px); height: var(--panel-height, auto); max-height: var(--panel-height, 360px); max-width: calc(100vw - 116px); min-height: 0; flex-shrink: 0; }
 .arrivals-panel > :not(.traffic-view) { flex-shrink: 0; }
 .traffic-view { display: flex; flex: 1; flex-direction: column; min-height: 0; }
 .schedule-source.hidden { display: none; }
@@ -1604,3 +1604,7 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
 @media(min-width: 901px) { .right-rail { max-height: calc(100dvh - var(--controls-height, 100px) - 124px); } }
 .mini-nearby .weather-traffic-map { height: 180px; }
 @media(max-width: 900px) { .mini-nearby .weather-traffic-map { height: 160px; } }
+
+.arrivals-header { align-items: center; flex-wrap: wrap; }
+.arrivals-header strong { margin-right: auto; }
+.arrivals-header #movements-fit { min-height: 32px; padding: 4px 8px; font-size: 11px; color: #bae6fd; background: #10273b; border: 1px solid #49637a; border-radius: 4px; cursor: pointer; }

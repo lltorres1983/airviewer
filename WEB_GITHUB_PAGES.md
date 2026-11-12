@@ -334,3 +334,8 @@ ao ativar; não é salva no perfil. O painel permite atualizar a posição, reco
 posição em memória. As camadas e a legenda ficam em detalhes expansíveis.
 No celular, o painel fica acima da navegação e cede espaço aos detalhes da
 aeronave selecionada ou ao menu aberto.
+
+O painel de movimentos usa altura automática conforme os voos, limitada a 360 px
+antes de rolar a lista. Ao redimensionar, as listas de programação e ao vivo
+ocupam toda a área disponível, sem o antigo limite interno de 190 px. O botão
+**Ajustar** restaura a altura automática e remove apenas a altura salva.

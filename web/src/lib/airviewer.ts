@@ -500,9 +500,10 @@ export function startAirviewer() {
       const heightDirection = -widthDirection;
       const minimumWidth = panel === airportCamera ? 300 : 260;
       const savedWidth = readStoredNumber(`${storageKey}-width`, width, minimumWidth, 900);
-      const savedHeight = readStoredNumber(`${storageKey}-height`, height, minimumHeight, 900);
+      const savedHeight = readStoredNumber(`${storageKey}-height`, panel === arrivalsPanel ? NaN : height, minimumHeight, 900);
       panel.style.setProperty('--panel-width', `${savedWidth}px`);
-      panel.style.setProperty('--panel-height', `${savedHeight}px`);
+      if (Number.isFinite(savedHeight)) panel.style.setProperty('--panel-height', `${savedHeight}px`);
+      else panel.style.removeProperty('--panel-height');
       if (panel === airportCamera) {
         cameraWidth = savedWidth;
         cameraSizeControl.value = String(cameraWidth);
@@ -2611,6 +2612,10 @@ export function startAirviewer() {
   showCameraSizeValue();
   initPanelResize(airportCamera, 'aircraft-3d-camera', cameraWidth, 270, 180);
   initPanelResize(arrivalsPanel, 'airviewer-movements', 360 * legacyPanelScale, 290 * legacyPanelScale, 220);
+  element('movements-fit').addEventListener('click', () => {
+    arrivalsPanel.style.removeProperty('--panel-height');
+    try { localStorage.removeItem('airviewer-movements-height'); } catch { /* Storage may be disabled. */ }
+  }, { signal: lifecycle.signal });
   airportSelect.value = selectedAirportCode;
   refreshInterval.value = String(refreshIntervalMs);
   updateTelemetry();

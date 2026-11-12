@@ -61,6 +61,7 @@ export default function App() {
           <div className="arrivals-header">
             <strong id="arrivals-title">MOVIMENTOS</strong>
             <span id="arrivals-count">carregando</span>
+            <button id="movements-fit" type="button" aria-label="Ajustar altura dos movimentos ao conteúdo">Ajustar</button>
           </div>
           <div
             className="traffic-tabs"
