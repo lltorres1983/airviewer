@@ -24,10 +24,20 @@ async function setup(page: Page, initial: HomeRadar | null = null) {
   }, session);
   await page.route(`${host}/rest/v1/aircraft_favorites**`, route => route.fulfill({ json: [] }));
   await page.route(`${host}/auth/v1/logout**`, route => route.fulfill({ status: 204 }));
-  await page.route(`${host}/auth/v1/user`, route => route.fulfill({ json: session.user }));
-  const db = { row: initial, fail: false, writes: 0 };
+  const db = { row: initial, fail: false, writes: 0, tableMissing: false, profileFail: false,
+    profileHome: null as Omit<HomeRadar, 'user_id'> | null, profileWrites: 0, profileAuthorization: '' };
+  await page.route(`${host}/auth/v1/user`, route => {
+    if (route.request().method() === 'PUT') {
+      if (db.profileFail) return route.fulfill({ status: 503, json: { message: 'Unavailable' } });
+      db.profileWrites++;
+      db.profileAuthorization = route.request().headers().authorization;
+      db.profileHome = route.request().postDataJSON().data.home_radar;
+    }
+    return route.fulfill({ json: { ...session.user, user_metadata: { home_radar: db.profileHome, full_name: 'Usuário de teste' } } });
+  });
   await page.route(`${host}/rest/v1/home_radar**`, route => {
     const method = route.request().method();
+    if (db.tableMissing) return route.fulfill({ status: 404, json: { code: 'PGRST205', message: 'Table missing' } });
     if (db.fail) return route.fulfill({ status: 503, json: { message: 'Unavailable' } });
     if (method === 'GET') return route.fulfill({ json: db.row });
     if (method === 'POST') { db.writes++; db.row = route.request().postDataJSON(); return route.fulfill({ status: 201, json: db.row }); }
@@ -118,4 +128,86 @@ test('radar funciona no celular e volta ao aeroporto ao desativar', async ({ pag
   await page.getByRole('button', { name: 'Sair do radar de casa' }).click();
   await expect(page.locator('.home-radar-marker')).toHaveCount(0);
   await expect(page.locator('#route')).toHaveText('TRAFEGO GRU');
+});
+
+
+test('salva a localização obtida no perfil quando a tabela ainda não existe', async ({ page, context }) => {
+  test.setTimeout(60000);
+  const db = await setup(page);
+  db.tableMissing = true;
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: savedHome.latitude, longitude: savedHome.longitude, accuracy: 15 });
+  await page.goto('/');
+  await openAccount(page);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Usar minha localização atual' }).click();
+  await expect(page.getByLabel('Latitude da casa')).toHaveValue(savedHome.latitude.toFixed(6));
+  await expect(page.locator('#home-address')).toHaveValue('Minha casa');
+  await page.getByRole('button', { name: 'Salvar localização', exact: true }).click();
+  await expect(page.getByText('Localização salva na sua conta.', { exact: false })).toBeVisible();
+  expect(db.profileWrites).toBe(1);
+  expect(db.writes).toBe(0);
+  expect(db.profileHome?.latitude).toBe(savedHome.latitude);
+  const claims = JSON.parse(Buffer.from(db.profileAuthorization.split('.')[1], 'base64url').toString());
+  expect(claims.sub).toBe(userId);
+  await page.reload();
+  await openAccount(page);
+  await expect(page.locator('#home-address')).toHaveValue('Minha casa');
+  await expect(page.getByLabel('Latitude da casa')).toHaveValue(String(savedHome.latitude));
+  // Applying the optional table later must not hide previously saved profile data.
+  db.tableMissing = false;
+  await page.reload();
+  await openAccount(page);
+  await expect(page.locator('#home-address')).toHaveValue('Minha casa');
+  await page.getByRole('button', { name: 'Excluir localização' }).click();
+  await expect(page.getByText('Localização excluída da sua conta.')).toBeVisible();
+  expect(db.profileHome).toBeNull();
+});
+
+test('falha no perfil não confirma salvamento nem perde os dados preenchidos', async ({ page }) => {
+  const db = await setup(page);
+  db.tableMissing = true;
+  db.profileFail = true;
+  await page.goto('/');
+  await openAccount(page);
+  await page.locator('#home-address').fill('Casa de teste');
+  await page.getByLabel('Latitude da casa').fill('-23.5');
+  await page.getByLabel('Longitude da casa').fill('-46.6');
+  await page.getByRole('button', { name: 'Salvar localização', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('Não foi possível salvar');
+  await expect(page.locator('#home-address')).toHaveValue('Casa de teste');
+  await expect(page.getByRole('button', { name: 'Abrir radar 3D' })).toHaveCount(0);
+  expect(db.profileHome).toBeNull();
+  db.profileFail = false;
+  await page.getByRole('button', { name: 'Salvar localização', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Abrir radar 3D' })).toBeVisible();
+});
+
+test('resposta de salvamento no perfil após sair não restaura a localização na tela', async ({ page }) => {
+  const db = await setup(page);
+  db.tableMissing = true;
+  let release!: () => void;
+  const held = new Promise<void>(resolve => { release = resolve; });
+  await page.route(`${host}/auth/v1/user`, async route => {
+    if (route.request().method() !== 'PUT') return route.fallback();
+    const saved = route.request().postDataJSON().data.home_radar;
+    await held;
+    return route.fulfill({ json: { id: userId, user_metadata: { home_radar: saved } } });
+  });
+  await page.goto('/');
+  await openAccount(page);
+  await page.locator('#home-address').fill('Casa de teste');
+  await page.getByLabel('Latitude da casa').fill('-23.5');
+  await page.getByLabel('Longitude da casa').fill('-46.6');
+  const saving = page.waitForRequest(request => request.url() === `${host}/auth/v1/user` && request.method() === 'PUT');
+  await page.getByRole('button', { name: 'Salvar localização', exact: true }).click();
+  await saving;
+  await page.getByRole('button', { name: 'Sair', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Entrar com Google' })).toBeVisible();
+  const finished = page.waitForResponse(response => response.url() === `${host}/auth/v1/user` && response.request().method() === 'PUT');
+  release();
+  await finished;
+  await expect(page.locator('#home-address')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Abrir radar 3D' })).toHaveCount(0);
+  await expect(page.getByText('Localização salva na sua conta.', { exact: false })).toHaveCount(0);
 });

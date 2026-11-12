@@ -38,6 +38,7 @@ export function HomeRadarPanel() {
     setMessage('');
     navigator.geolocation.getCurrentPosition(position => {
       if (locationRequest.current !== request) return;
+      setAddress(value => value.trim() ? value : 'Minha casa');
       setLatitude(position.coords.latitude.toFixed(6));
       setLongitude(position.coords.longitude.toFixed(6));
       setLocating(false);
@@ -62,7 +63,7 @@ export function HomeRadarPanel() {
         <label htmlFor="home-address">Endereço ou referência</label>
         <input id="home-address" value={address} onChange={event => setAddress(event.target.value)} required maxLength={300} autoComplete="street-address" placeholder="Rua, número, cidade e estado" />
         <Button variant="secondary" type="button" onClick={locate}>{locating ? 'Obtendo localização…' : 'Usar minha localização atual'}</Button>
-        <p className="home-radar-hint">Estando em casa, use sua localização atual. Você também pode copiar as coordenadas de um mapa. O endereço é uma referência; o radar usa as coordenadas abaixo.</p>
+        <p className="home-radar-hint">Estando em casa, use sua localização atual. Você também pode copiar as coordenadas de um mapa. A localização preenche as coordenadas e usa “Minha casa” como referência se o nome estiver vazio. Você pode informar rua e número acima.</p>
         <div className="home-radar-coordinates">
           <label>Latitude<input aria-label="Latitude da casa" type="number" step="any" min="-85" max="85" required value={latitude} onChange={event => setLatitude(event.target.value)} /></label>
           <label>Longitude<input aria-label="Longitude da casa" type="number" step="any" min="-180" max="180" required value={longitude} onChange={event => setLongitude(event.target.value)} /></label>

@@ -162,18 +162,28 @@ Referências: [Google no Supabase](https://supabase.com/docs/guides/auth/social-
 
 Em **Conta e favoritos → Radar da minha casa**, o usuário informa uma referência
 ou endereço, coordenadas e raio de 5, 10 ou 20 km. O botão de localização atual
-preenche as coordenadas mediante a permissão do navegador; o endereço não é
+preenche as coordenadas mediante a permissão do navegador e usa “Minha casa”
+como referência quando o campo está vazio; o endereço não é
 geocodificado automaticamente. **Salvar localização** persiste os dados na conta,
 e **Abrir radar 3D** centraliza o mapa inclinado na casa, com anéis de distância.
 O painel mostra tráfego ADS-B dentro do raio, incluindo helicópteros e sobrevoos,
 com distância, altitude e indicação de aproximação conforme o rumo informado.
 Isso não é uma previsão de passagem sobre a casa.
 
-Aplique `supabase/migrations/20261112000000_home_radar.sql` no mesmo projeto Supabase
-antes de publicar este recurso. A tabela `home_radar` permite uma localização por
-usuário; RLS restringe leitura e alterações ao dono. A exclusão da conta remove a
-localização. **Excluir localização** apaga o registro, e sair da conta limpa o
-radar da tela. O modo ativo não é persistido automaticamente entre visitas.
+A tabela `home_radar`, quando disponível, usa RLS para restringir leitura e
+alterações ao dono. Se a tabela ainda não existir, o aplicativo salva no campo
+`home_radar` dos metadados do próprio perfil autenticado no Supabase Auth. Isso
+permite cadastrar a casa sem acesso administrativo ou migração prévia. As
+requisições ao perfil usam o token da conta que iniciou a operação, e respostas
+atrasadas são descartadas ao sair ou trocar de conta. Outros erros da tabela
+não são tratados como ausência de migração.
+
+A migração `supabase/migrations/20261112000000_home_radar.sql` continua disponível
+para armazenamento na tabela. Localizações já salvas no perfil permanecem
+acessíveis se a tabela for criada depois. Metadados são dados editáveis do usuário,
+nunca critérios de autorização; podem compor os tokens de sessão do Supabase.
+**Excluir localização** remove o dado do armazenamento utilizado; excluir a conta
+também o remove. Sair da conta limpa o radar da tela. O modo ativo não é persistido automaticamente entre visitas.
 O endereço não é incluído no código, nos arquivos estáticos ou na URL da página.
 A consulta regional de tráfego usa as coordenadas no serviço ADS-B existente.
 

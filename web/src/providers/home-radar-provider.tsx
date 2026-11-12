@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useAccount } from './account-provider';
-import { supabase } from '@/lib/supabase';
+import { supabase, requestOwnProfile } from '@/lib/supabase';
+import { homeFromProfile, missingHomeTable } from '@/lib/home-radar-storage';
 import type { HomeRadar } from '@/lib/database.types';
 import { getRadarOrigin, setRadarOrigin, subscribeRadarOrigin } from '@/lib/home-radar';
 
@@ -31,25 +32,34 @@ export function HomeRadarProvider({ children }: { children: ReactNode }) {
   currentUser.current = userId;
   const generation = useRef(0);
   const pending = useRef(false);
+  const storage = useRef<'table' | 'profile'>('table');
   const active = Boolean(useSyncExternalStore(subscribeRadarOrigin, getRadarOrigin));
 
   useEffect(() => {
     const request = ++generation.current;
     const controller = new AbortController();
     pending.current = false;
+    storage.current = 'table';
     setHome(null);
     setBusy(false);
     setError('');
     setLoading(Boolean(userId && supabase));
     setRadarOrigin(null);
-    if (userId && supabase) {
+    if (userId && session && supabase) {
       void (async () => {
         try {
           const { data, error: failure } = await supabase.from('home_radar')
             .select('*').eq('user_id', userId).abortSignal(controller.signal).maybeSingle();
           if (controller.signal.aborted || generation.current !== request || currentUser.current !== userId) return;
-          if (failure) throw failure;
-          setHome(data);
+          if (failure && !missingHomeTable(failure)) throw failure;
+          if (data) setHome(data);
+          else {
+            const profile = await requestOwnProfile(session, undefined, controller.signal);
+            if (controller.signal.aborted || generation.current !== request || currentUser.current !== userId) return;
+            const saved = homeFromProfile(profile);
+            storage.current = failure || saved ? 'profile' : 'table';
+            setHome(saved);
+          }
         } catch {
           if (!controller.signal.aborted && currentUser.current === userId)
             setError('Não foi possível carregar sua localização. Tente novamente.');
@@ -62,7 +72,7 @@ export function HomeRadarProvider({ children }: { children: ReactNode }) {
   }, [userId, revision]);
 
   async function mutate(input: HomeInput | null) {
-    if (!supabase || !userId || pending.current || loading) return false;
+    if (!supabase || !session || !userId || pending.current || loading) return false;
     const owner = userId;
     const request = generation.current;
     pending.current = true;
@@ -70,25 +80,40 @@ export function HomeRadarProvider({ children }: { children: ReactNode }) {
     setError('');
     const isCurrent = () => generation.current === request && currentUser.current === owner;
     try {
-      if (input) {
-        if (!input.address.trim() || input.address.trim().length > 300 ||
-            !Number.isFinite(input.latitude) || Math.abs(input.latitude) > 85 ||
-            !Number.isFinite(input.longitude) || Math.abs(input.longitude) > 180 ||
-            ![5, 10, 20].includes(input.radius_km)) throw new Error('invalid');
-        const { data, error: failure } = await supabase.from('home_radar')
-          .upsert({ ...input, address: input.address.trim(), user_id: owner, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
-          .select('*').single();
-        if (failure || !data) throw failure || new Error('empty');
-        if (!isCurrent()) return false;
-        setHome(data);
-        if (getRadarOrigin()) setRadarOrigin(data);
-      } else {
-        const { error: failure } = await supabase.from('home_radar').delete().eq('user_id', owner);
-        if (failure) throw failure;
-        if (!isCurrent()) return false;
-        setHome(null);
-        setRadarOrigin(null);
+      const saved = input ? { ...input, address: input.address.trim(), updated_at: new Date().toISOString() } : null;
+      if (saved && (!saved.address || saved.address.length > 300 ||
+          !Number.isFinite(saved.latitude) || Math.abs(saved.latitude) > 85 ||
+          !Number.isFinite(saved.longitude) || Math.abs(saved.longitude) > 180 ||
+          ![5, 10, 20].includes(saved.radius_km))) throw new Error('invalid');
+      let nextHome: HomeRadar | null = null;
+      if (storage.current === 'table') {
+        if (saved) {
+          const { data, error: failure } = await supabase.from('home_radar')
+            .upsert({ ...saved, user_id: owner }, { onConflict: 'user_id' }).select('*').single();
+          if (!isCurrent()) return false;
+          if (failure && !missingHomeTable(failure)) throw failure;
+          if (failure) storage.current = 'profile';
+          else if (!data) throw new Error('empty');
+          else nextHome = data;
+        } else {
+          const { error: failure } = await supabase.from('home_radar').delete().eq('user_id', owner);
+          if (!isCurrent()) return false;
+          if (failure && !missingHomeTable(failure)) throw failure;
+          if (failure) storage.current = 'profile';
+        }
       }
+      if (storage.current === 'profile') {
+        const profile = await requestOwnProfile(session, { home_radar: saved });
+        if (!isCurrent()) return false;
+        nextHome = homeFromProfile(profile);
+        // Confirm persistence from the authenticated server response.
+        if (saved ? !nextHome || nextHome.address !== saved.address || nextHome.latitude !== saved.latitude ||
+          nextHome.longitude !== saved.longitude || nextHome.radius_km !== saved.radius_km : nextHome !== null)
+          throw new Error('Profile was not saved');
+      }
+      if (!isCurrent()) return false;
+      setHome(nextHome);
+      if (!nextHome || getRadarOrigin()) setRadarOrigin(nextHome);
       return true;
     } catch {
       if (isCurrent()) setError(input ? 'Não foi possível salvar sua localização. Confira os dados e tente novamente.' : 'Não foi possível excluir sua localização. Tente novamente.');
