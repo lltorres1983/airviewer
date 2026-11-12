@@ -3,14 +3,15 @@ import { Observatory } from "@/components/observatory";
 import { startTrafficRecording } from "@/lib/traffic-recording";
 import { AirportSpotting } from "@/components/airport-spotting";
 import { HomeRadarTrigger } from "@/components/home-radar-panel";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AccountPanel, AccountTrigger } from "@/components/account-panel";
 import { AircraftDetails } from "@/components/aircraft-details";
 import { startAirviewer } from "@/lib/airviewer";
 
 export default function App() {
-  useEffect(() => startAirviewer(), []);
+  // Restore imperatively moved mobile nodes before React removes the page.
+  useLayoutEffect(() => startAirviewer(), []);
   useEffect(() => startTrafficRecording(), []);
   return (
     <>

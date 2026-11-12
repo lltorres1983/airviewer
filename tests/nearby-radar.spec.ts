@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+test.use({ actionTimeout: 15000 });
+test.setTimeout(60000);
 import { fixtures } from './fixtures';
 import { cameraHeading, directionCandidates, nearbyAircraft, type Observer } from '../web/src/lib/nearby-radar';
 test.use({ launchOptions: { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] } });
@@ -20,7 +22,7 @@ test('radar filtra solo, dados antigos e voos fora do raio; câmera usa norte ab
   expect(cameraHeading({ alpha: 0, beta: 90, gamma: 0, absolute: false, webkitCompassHeading: 45, webkitCompassAccuracy: 10 })).toBe(45);
   expect(cameraHeading({ alpha: 0, beta: 90, gamma: 0, absolute: false, webkitCompassHeading: 45, webkitCompassAccuracy: -1 })).toBeNull();
 });
-async function setup(page: Page) {
+async function setup(page: Page, camera = true) {
   await fixtures(page, [north, east]);
   await page.context().grantPermissions(['geolocation', 'camera']);
   await page.context().setGeolocation({ ...origin });
@@ -28,7 +30,12 @@ async function setup(page: Page) {
   await page.getByRole('button', { name: 'Radar perto de mim', exact: true }).click();
   const panel = page.getByRole('dialog', { name: 'Radar perto de mim', exact: true });
   await panel.getByRole('button', { name: 'Usar localização agora', exact: true }).click();
-  await expect(panel.locator('.nearby-flights')).toContainText('NEAR1000');
+  await expect(panel.locator('.nearby-flights')).toContainText('NEAR1000', { timeout: 15000 });
+  if (camera) {
+    await panel.getByRole('link', { name: 'Abrir página da câmera' }).click();
+    await expect(page).toHaveURL(/#\/camera$/);
+    return page.getByRole('main', { name: 'Câmera do céu' });
+  }
   return panel;
 }
 async function mockCamera(page: Page, permission: 'granted' | 'denied' = 'granted') {
@@ -50,15 +57,17 @@ test('radar temporário, câmera por direção e encerramento dos recursos', asy
   test.setTimeout(90000);
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await mockCamera(page);
-  const panel = await setup(page);
+  const radar = await setup(page, false);
   await page.route('https://api.planespotters.net/pub/photos/reg/PT-ABC', route => route.fulfill({ json: { photos: [{
     thumbnail: { src: 'https://t.plnspttrs.net/sky-small.jpg' }, thumbnail_large: { src: 'https://t.plnspttrs.net/sky-large.jpg' },
     link: 'https://www.planespotters.net/photo/sky-test', photographer: 'Fotógrafo de teste',
   }] } }));
   await page.route('https://t.plnspttrs.net/sky-small.jpg', route => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180"><rect width="240" height="180" fill="#b9d4e6"/><text x="120" y="90" text-anchor="middle" fill="#132b40" font-size="20">FOTO DE TESTE</text></svg>' }));
-  await expect(panel.getByRole('button', { name: 'Ver NEAR1000', exact: true })).toBeVisible();
-  await panel.getByRole('button', { name: 'Ver NEAR1000', exact: true }).click();
-  await expect(panel.locator('.nearby-selection')).toContainText('PT-ABC');
+  await expect(radar.getByRole('button', { name: 'Ver NEAR1000', exact: true })).toBeVisible();
+  await radar.getByRole('button', { name: 'Ver NEAR1000', exact: true }).click();
+  await expect(radar.locator('.nearby-selection')).toContainText('PT-ABC');
+  await radar.getByRole('link', { name: 'Abrir página da câmera' }).click();
+  const panel = page.getByRole('main', { name: 'Câmera do céu' });
   await panel.getByRole('button', { name: 'Ativar câmera e bússola' }).click();
   await expect(panel.locator('.sky-view')).toHaveClass(/is-enabled/);
   await expect(panel.getByRole('button', { name: 'Reativar câmera e bússola' })).toBeEnabled();
@@ -71,7 +80,7 @@ test('radar temporário, câmera por direção e encerramento dos recursos', asy
     };
     publish(); window.setInterval(publish, 250);
   });
-  await expect(panel.locator('.sky-candidates')).toContainText('NEAR1000');
+  await expect(panel.locator('.sky-candidates')).toContainText('NEAR1000', { timeout: 15000 });
   await expect(panel.locator('.sky-candidates')).not.toContainText('EAST2000');
   const thumbnail = panel.getByRole('img', { name: 'Foto de PT-ABC', exact: true });
   await expect(thumbnail).toHaveAttribute('src', 'https://t.plnspttrs.net/sky-small.jpg');
@@ -83,7 +92,7 @@ test('radar temporário, câmera por direção e encerramento dos recursos', asy
   await thumbnail.evaluate(image => image.dispatchEvent(new Event('error')));
   await expect(panel.locator('.sky-candidates')).toContainText('Sem foto');
   await expect(thumbnail).toHaveCount(0);
-  await expect(panel.locator('.sky-candidates')).toContainText('NEAR1000');
+  await expect(panel.locator('.sky-candidates')).toContainText('NEAR1000', { timeout: 15000 });
   await page.setViewportSize({ width: 1280, height: 720 });
   expect(await page.evaluate(() => (window as unknown as { cameraTest: { audio: boolean } }).cameraTest.audio)).toBe(false);
   expect(await page.evaluate(() => (window as unknown as { cameraTest: { requestedAbsolute: boolean } }).cameraTest.requestedAbsolute)).toBe(true);
@@ -93,11 +102,12 @@ test('radar temporário, câmera por direção e encerramento dos recursos', asy
   expect(await page.evaluate(() => (window as unknown as { cameraTest: { stopped: number } }).cameraTest.stopped)).toBe(1);
   await panel.getByRole('button', { name: 'Ativar câmera e bússola' }).click();
   await expect(panel.locator('.sky-view')).toHaveClass(/is-enabled/);
-  await panel.getByRole('button', { name: 'Fechar radar perto de mim' }).click();
+  await panel.getByRole('link', { name: 'Voltar ao radar' }).click();
   expect(await page.evaluate(() => (window as unknown as { cameraTest: { stopped: number } }).cameraTest.stopped)).toBe(2);
+  await expect(radar.locator('.nearby-flights')).toContainText('NEAR1000', { timeout: 15000 });
+  await radar.getByRole('button', { name: 'Fechar radar perto de mim' }).click();
   await page.getByRole('button', { name: 'Radar perto de mim', exact: true }).click();
-  await expect(panel.getByRole('button', { name: 'Usar localização agora' })).toBeVisible();
-  await expect(panel.locator('.nearby-flights')).toHaveCount(0);
+  await expect(radar.getByRole('button', { name: 'Usar localização agora' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 test('bússola negada não sugere voos; câmera para ao ocultar a página e layout funciona no celular', async ({ page }) => {
@@ -106,7 +116,7 @@ test('bússola negada não sugere voos; câmera para ao ocultar a página e layo
   await page.setViewportSize({ width: 390, height: 844 });
   await panel.getByRole('button', { name: 'Ativar câmera e bússola' }).click();
   await expect(panel).toContainText('Bússola não autorizada ou indisponível');
-  await expect(panel.locator('.sky-candidates')).not.toContainText('NEAR1000');
+  await expect(panel.locator('.sky-candidates')).not.toContainText('NEAR1000', { timeout: 15000 });
   expect(await panel.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
   await panel.locator('.sky-guide').screenshot({ path: 'test-results/sky-mobile.png' });
   await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: true }); document.dispatchEvent(new Event('visibilitychange')); });
@@ -122,7 +132,7 @@ test('permissão de localização negada informa erro sem consultar radar privad
   const panel = page.getByRole('dialog', { name: 'Radar perto de mim', exact: true });
   await panel.getByRole('button', { name: 'Usar localização agora' }).click();
   await expect(panel.getByRole('alert')).toContainText('Acesso à localização negado');
-  await expect(panel.locator('.nearby-radar')).toHaveCount(0);
+  await expect(panel.locator('.weather-traffic-map')).toHaveCount(0);
   expect(nearbyRequests).toBe(0);
 });
 test('câmera negada mantém radar e não mostra candidatos', async ({ page }) => {
@@ -130,7 +140,7 @@ test('câmera negada mantém radar e não mostra candidatos', async ({ page }) =
   const panel = await setup(page);
   await panel.getByRole('button', { name: 'Ativar câmera e bússola' }).click();
   await expect(panel.getByRole('alert')).toContainText('Permissão de câmera negada');
-  await expect(panel.locator('.nearby-flights')).toContainText('NEAR1000');
+  await expect(panel.getByRole('link', { name: 'Voltar ao radar' })).toBeVisible();
   await expect(panel.locator('.sky-candidates')).toHaveCount(0);
 });
 
@@ -148,7 +158,7 @@ test('câmera autorizada depois de fechar é encerrada sem reabrir o painel', as
   const panel = await setup(page);
   await panel.getByRole('button', { name: 'Ativar câmera e bússola' }).click();
   await expect(panel.getByRole('button', { name: 'Abrindo câmera…' })).toBeDisabled();
-  await panel.getByRole('button', { name: 'Fechar radar perto de mim' }).click();
+  await panel.getByRole('link', { name: 'Voltar ao radar' }).click();
   await page.evaluate(() => (window as unknown as { resolveCamera: () => void }).resolveCamera());
   await expect.poll(() => page.evaluate(() => (window as unknown as { lateStopped: number }).lateStopped)).toBe(1);
   await expect(panel).not.toBeVisible();

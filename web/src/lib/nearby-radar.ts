@@ -1,7 +1,7 @@
 import { bearing, distanceKm } from './airport-operations';
 import type { AdsbAircraft } from './types';
 export type Observer = { latitude: number; longitude: number; accuracy: number; time: number };
-export type NearbyAircraft = { hex: string; flight: string; registration: string; type: string; latitude: number; longitude: number; altitude: number | null; distance: number; bearing: number };
+export type NearbyAircraft = { hex: string; flight: string; registration: string; type: string; latitude: number; longitude: number; altitude: number | null; track?: number | null; distance: number; bearing: number };
 export const angleDifference = (a: number, b: number) => ((a - b + 540) % 360) - 180;
 export function nearbyAircraft(raw: AdsbAircraft[], origin: Observer, radius: number): NearbyAircraft[] {
   const unique = new Map<string, NearbyAircraft>();
@@ -12,6 +12,7 @@ export function nearbyAircraft(raw: AdsbAircraft[], origin: Observer, radius: nu
     if (distance > radius) continue;
     const altitude = typeof a.alt_baro === 'number' ? a.alt_baro : typeof a.alt_geom === 'number' ? a.alt_geom : null;
     unique.set(a.hex, { hex: a.hex, flight: String(a.flight || a.r || a.hex).trim(), registration: String(a.r || ''), type: String(a.t || ''), latitude: a.lat, longitude: a.lon,
+      track: typeof a.track === 'number' && Number.isFinite(a.track) ? ((a.track % 360) + 360) % 360 : null,
       altitude: altitude !== null && Number.isFinite(altitude) ? altitude : null, distance, bearing: bearing([origin.longitude, origin.latitude], [a.lon, a.lat]) });
   }
   return [...unique.values()].sort((a, b) => a.distance - b.distance).slice(0, 150);

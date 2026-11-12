@@ -25,6 +25,9 @@ export async function fixtures(page: Page, aircraft?: AdsbAircraft[]) {
       return route.fulfill({
         json: { tilejson: "3.0.0", tiles: [], vector_layers: [] },
       });
+    if (url.includes("api.rainviewer.com")) return route.fulfill({ json: { host: 'https://tilecache.rainviewer.com', radar: { past: [{ time: Math.floor(Date.now()/1000), path: '/v2/radar/test-frame' }] } } });
+    if (url.includes('ImageServer/query')) return route.fulfill({ json: { features: [{ attributes: { objectid: 12, start_time: Date.now() } }] } });
+    if (url.includes('ImageServer/exportImage') || url.includes('tilecache.rainviewer.com')) return route.fulfill({ contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
     if (url.includes("api.open-meteo.com")) return route.fulfill({ json: localWeatherFixture() });
     if (url.includes("api.adsb.lol"))
       return route.fulfill({

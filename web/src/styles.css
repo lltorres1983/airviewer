@@ -1481,3 +1481,26 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
 .sky-candidate-info p { margin: 0; }
 .sky-candidate-info small { display: block; margin-top: 5px; font-size: 10px; line-height: 1.4; color: #bdcedd; }
 .sky-candidate-photo:focus-visible { outline: 2px solid #7ee8ff; outline-offset: 2px; }
+
+.nearby-page-link { display: inline-flex; align-items: center; min-height: 42px; padding: 9px 12px; border: 1px solid #49637a; border-radius: 6px; background: #152b40; color: #7ee8ff; font-size: 14px; text-decoration: none; }
+.sky-camera-page { inset: 0; border: 0; border-radius: 0; padding: 24px max(20px, calc((100vw - 960px) / 2)); }
+.sky-camera-page h1 { margin: 0; font-size: 26px; }
+.sky-camera-page a { color: #7ee8ff; }
+.camera-page-content { max-width: 640px; margin: 0 auto; }
+.camera-page-content .sky-view { max-height: none; height: min(68dvh, 680px); min-height: 400px; aspect-ratio: auto; }
+.nearby-panel .nearby-layout { grid-template-columns: minmax(0, 1.8fr) minmax(250px, 1fr); }
+.weather-traffic-map { height: clamp(350px, 55vh, 650px); border: 1px solid #49637a; border-radius: 10px; overflow: hidden; }
+.weather-traffic-map .maplibregl-ctrl button { padding: 0; min-height: 29px; background: white; border: 0; border-radius: 0; }
+.weather-traffic-map .maplibregl-ctrl-attrib { color: #222; }
+.weather-traffic-map .maplibregl-ctrl-attrib a { color: #222; }
+.weather-layer-controls { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px; }
+.weather-layer-controls label { display: flex; align-items: center; gap: 7px; min-height: 40px; font-size: 14px; }
+.observatory-panel .weather-layer-controls input[type=checkbox] { width: 18px; height: 18px; min-height: 18px; padding: 0; accent-color: #7ee8ff; }
+.weather-opacity { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+.weather-opacity label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: #bdcedd; }
+.weather-opacity input { width: 100%; min-height: 32px; accent-color: #7ee8ff; }
+.weather-layer-times p { margin: 8px 0; font-size: 12px; }
+.precipitation-legend { display: flex; flex-wrap: wrap; gap: 8px 12px; margin: 16px 0; align-items: center; font-size: 12px; }
+.precipitation-legend span { display: inline-flex; gap: 4px; align-items: center; }
+.precipitation-legend i { width: 16px; height: 12px; border: 1px solid #ccc; }
+@media(max-width: 800px) { .nearby-panel .nearby-layout { grid-template-columns: minmax(0, 1fr); } .sky-camera-page { padding: 18px; } .sky-camera-page .observatory-header { flex-wrap: wrap; } }

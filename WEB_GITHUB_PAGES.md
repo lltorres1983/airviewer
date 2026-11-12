@@ -289,11 +289,23 @@ precisão da bússola e permissões precisam de validação em aparelhos reais.
 
 Validação: `npx playwright test tests/nearby-radar.spec.ts --workers=1`.
 
-O radar local tem apresentação circular inspirada em PPI: anéis de distância,
-marcações de 5°, rumos de 30°, norte fixo, centro na posição obtida e alvos ADS-B
-selecionáveis. A varredura verde é apenas ilustrativa e não determina quando
-uma aeronave aparece; pode ser pausada e respeita `prefers-reduced-motion`.
-Sem tráfego recente, a animação fica pausada.
+O radar local agora sobrepõe aeronaves, nuvens e precipitação em um mapa
+geográfico, com círculo de alcance, seleção de voos e controles de opacidade.
+A camada GeoColor do NOAA GOES-East mostra nuvens e superfície; a precipitação
+usa a composição mais recente do RainViewer, com legenda em dBZ e máscara de
+áreas sem cobertura. Ausência de manchas não garante ausência de chuva.
+São fontes independentes, com horários próprios e resolução regional (zoom
+nativo máximo 7). Metadados são consultados a cada cinco minutos, com atualização
+manual; imagens com mais de 90 minutos são ocultadas. Falhas são sinalizadas.
+As fontes recebem pedidos das imagens da área visualizada, sem salvar o endereço.
+Referências: [RainViewer](https://www.rainviewer.com/api/weather-maps-api.html)
+e [NOAA GOES-East](https://satellitemaps.nesdis.noaa.gov/arcgis/rest/services/ABIGC_Last_24hr/ImageServer).
+
+A câmera está em uma página própria, `#/camera`, acessível por **Abrir página da
+câmera**. **Voltar ao radar** abre `#/radar`. A posição é compartilhada apenas em
+memória durante essa navegação; recarregar a página exige obter a localização
+novamente. Sair da câmera encerra o vídeo e os sensores. O mapa principal fica
+desmontado enquanto a página da câmera está aberta.
 
 A meteorologia local usa a [Forecast API da Open-Meteo](https://open-meteo.com/en/docs),
 com coordenadas arredondadas a três casas decimais, sem gravá-las no perfil.
