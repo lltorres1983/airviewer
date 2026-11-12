@@ -1,9 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCurrentLocation, getCameraOrigin, setCameraOrigin } from '@/lib/use-current-location';
 import { useNearbyTraffic } from '@/lib/use-nearby-traffic';
 import { WeatherTrafficMap } from './weather-traffic-map';
 
 export function MiniNearbyRadar() {
+  const panel = useRef<HTMLElement>(null);
+  const drag = useRef<{ id: number; x: number; y: number; left: number; top: number } | null>(null);
+  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
+  const constrain = (left: number, top: number) => {
+    const rect = panel.current?.getBoundingClientRect();
+    const bottom = window.innerWidth <= 900 ? 88 : 12;
+    return { left: Math.max(12, Math.min(left, window.innerWidth - (rect?.width || 300) - 12)), top: Math.max(12, Math.min(top, window.innerHeight - (rect?.height || 200) - bottom)) };
+  };
+  useEffect(() => {
+    const fit = () => setPosition(previous => previous ? constrain(previous.left, previous.top) : null);
+    window.addEventListener('resize', fit);
+    const observer = new ResizeObserver(fit);
+    if (panel.current) observer.observe(panel.current);
+    return () => { observer.disconnect(); window.removeEventListener('resize', fit); };
+  }, []);
   const { origin, locating, locate, error, now } = useCurrentLocation(getCameraOrigin());
   const [expanded, setExpanded] = useState(true);
   const [selected, setSelected] = useState('');
@@ -11,8 +26,13 @@ export function MiniNearbyRadar() {
   const aircraft = feed.time && now - feed.time <= 60000 ? feed.aircraft : [];
   const current = aircraft.find(a => a.hex === selected);
   const openRadar = () => { setCameraOrigin(origin); window.dispatchEvent(new Event('airviewer:open-nearby')); };
-  return <section className="mini-nearby" aria-label="Radar compacto perto de mim">
-    <header><h2>Perto de mim</h2><button aria-label={expanded ? 'Recolher radar compacto' : 'Expandir radar compacto'} aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Recolher' : 'Expandir'}</button></header>
+  return <section ref={panel} style={position || undefined} className="mini-nearby" aria-label="Radar compacto perto de mim">
+    <header><h2><button className="mini-radar-drag" aria-label="Mover radar compacto" title="Arraste para mover. Use as setas do teclado; Home restaura a posição."
+      onPointerDown={event => { if (event.button !== 0 || !event.isPrimary) return; const rect = panel.current!.getBoundingClientRect(); drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, left: rect.left, top: rect.top }; event.currentTarget.setPointerCapture(event.pointerId); }}
+      onPointerMove={event => { const start = drag.current; if (start?.id === event.pointerId) setPosition(constrain(start.left + event.clientX - start.x, start.top + event.clientY - start.y)); }}
+      onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}
+      onKeyDown={event => { if (event.key === 'Home') { event.preventDefault(); setPosition(null); return; } if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return; event.preventDefault(); const rect = panel.current!.getBoundingClientRect(); const step = event.shiftKey ? 40 : 16; setPosition(constrain(rect.left + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0), rect.top + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0))); }}>
+      <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor" aria-hidden="true"><circle cx="3" cy="3" r="1"/><circle cx="9" cy="3" r="1"/><circle cx="3" cy="8" r="1"/><circle cx="9" cy="8" r="1"/><circle cx="3" cy="13" r="1"/><circle cx="9" cy="13" r="1"/></svg>Perto de mim</button></h2><button className="mini-radar-collapse" aria-label={expanded ? 'Recolher radar compacto' : 'Expandir radar compacto'} aria-expanded={expanded} onClick={() => setExpanded(!expanded)}><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M2 7h10"/>{!expanded && <path d="M7 2v10"/>}</svg></button></header>
     {expanded && <>
       {!origin && <p>Veja aviões, nuvens e chuva em até 20 km de você.</p>}
       {origin && <><WeatherTrafficMap compact origin={origin} radius={20} aircraft={aircraft} selected={selected} onSelect={setSelected} now={now} />
@@ -20,7 +40,7 @@ export function MiniNearbyRadar() {
         {current && <p>{current.flight} · {current.distance.toFixed(1)} km</p>}
       </>}
       {error && <p role="alert">{error}</p>}
-      <div className="mini-nearby-actions"><button onClick={locate} disabled={locating}>{locating ? 'Localizando…' : origin ? 'Atualizar posição' : 'Ativar radar local'}</button><button onClick={openRadar}>Abrir completo</button></div>
+      <div className="mini-nearby-actions"><button aria-label={origin ? 'Atualizar posição' : 'Ativar radar local'} onClick={locate} disabled={locating}>{locating ? 'Localizando…' : origin ? 'Atualizar' : 'Ativar radar local'}</button><button aria-label="Abrir completo" onClick={openRadar}>Completo</button></div>
       {!origin && <small>Sua localização não será salva no perfil.</small>}
     </>}
   </section>;

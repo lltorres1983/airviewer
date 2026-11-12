@@ -42,3 +42,29 @@ test('localização negada no radar compacto mantém ação para tentar novament
   await expect(mini.locator('canvas')).toHaveCount(0);
   await expect(mini.getByRole('button', { name: 'Ativar radar local' })).toBeEnabled();
 });
+
+test('radar abre à esquerda, move pelo título e teclado e permanece dentro da tela', async ({ page }) => {
+  await fixtures(page);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  const mini = page.getByRole('region', { name: 'Radar compacto perto de mim' });
+  const handle = mini.getByRole('button', { name: 'Mover radar compacto' });
+  await expect(mini).toBeVisible();
+  const initial = (await mini.boundingBox())!;
+  expect(initial.x).toBe(16);
+  const grip = (await handle.boundingBox())!;
+  await page.mouse.move(grip.x + 40, grip.y + 15);
+  await page.mouse.down();
+  await page.mouse.move(grip.x + 280, grip.y + 95, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(async () => Math.round((await mini.boundingBox())!.x)).toBe(256);
+  await handle.focus();
+  await page.keyboard.press('ArrowRight');
+  expect(Math.round((await mini.boundingBox())!.x)).toBe(272);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect.poll(async () => { const rect = (await mini.boundingBox())!; return rect.x + rect.width; }).toBeLessThanOrEqual(378);
+  await page.keyboard.press('Home');
+  expect(Math.round((await mini.boundingBox())!.x)).toBe(12);
+  await expect(handle).toHaveCSS('touch-action', 'none');
+  await expect(mini.getByRole('button', { name: 'Ativar radar local' })).toBeVisible();
+});

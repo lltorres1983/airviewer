@@ -332,8 +332,11 @@ A tela inicial inclui um radar compacto de 20 km. A localização só é solicit
 ao ativar; não é salva no perfil. O painel permite atualizar a posição, recolher
 (interrompendo as consultas e desmontando o mapa) e abrir o dashboard com a mesma
 posição em memória. As camadas e a legenda ficam em detalhes expansíveis.
-No celular, o painel fica acima da navegação e cede espaço aos detalhes da
-aeronave selecionada ou ao menu aberto.
+O painel abre à esquerda e pode ser arrastado pelo título com mouse ou toque.
+Com o título focado, as setas movem o painel e Home restaura a posição inicial.
+A posição fica somente em memória e é limitada à área visível ao redimensionar.
+No celular, cede espaço aos detalhes da aeronave selecionada ou ao menu aberto.
+Os botões compactos de atualização e abertura completa priorizam a área do mapa.
 
 O painel de movimentos usa altura automática conforme os voos, limitada a 360 px
 antes de rolar a lista. Ao redimensionar, as listas de programação e ao vivo

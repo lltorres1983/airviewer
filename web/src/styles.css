@@ -1593,14 +1593,6 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
 .weather-traffic-compact .weather-opacity label, .weather-traffic-compact .weather-layer-times p { font-size: 11px; }
 .weather-traffic-compact .precipitation-legend { font-size: 10px; gap: 6px; }
 .weather-traffic-compact .weather-map-notes p { font-size: 11px; }
-@media(max-width: 900px) {
-  .right-rail { display: flex; top: auto; bottom: calc(112px + env(safe-area-inset-bottom)); right: 12px; left: auto; width: 256px; max-width: calc(100vw - 24px); max-height: 50dvh; }
-  .right-rail > :not(.mini-nearby):not(.aircraft-details-slot) { display: none; }
-  .right-rail:has(.aircraft-details) > .mini-nearby { display: none; }
-  .mini-nearby { width: 100%; }
-  .mini-nearby .weather-traffic-map { height: 180px; }
-  .mini-nearby button { min-height: 44px; }
-}
 @media(min-width: 901px) { .right-rail { max-height: calc(100dvh - var(--controls-height, 100px) - 124px); } }
 .mini-nearby .weather-traffic-map { height: 180px; }
 @media(max-width: 900px) { .mini-nearby .weather-traffic-map { height: 160px; } }
@@ -1608,3 +1600,22 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
 .arrivals-header { align-items: center; flex-wrap: wrap; }
 .arrivals-header strong { margin-right: auto; }
 .arrivals-header #movements-fit { min-height: 32px; padding: 4px 8px; font-size: 11px; color: #bae6fd; background: #10273b; border: 1px solid #49637a; border-radius: 4px; cursor: pointer; }
+
+/* Independent movable radar: map first, compact actions. */
+.mini-nearby { position: fixed; z-index: 9; left: 16px; top: 100px; width: 300px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 124px); overflow: auto; padding: 8px; scrollbar-width: thin; scrollbar-color: #49637a #0b1c2b; }
+.mini-nearby header { gap: 8px; }
+.mini-nearby h2 { flex: 1; }
+.mini-nearby button { min-height: 30px; padding: 4px 8px; font-size: 11px; }
+.mini-nearby .mini-radar-drag { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 4px; font-size: 13px; font-weight: 600; touch-action: none; cursor: grab; user-select: none; }
+.mini-nearby .mini-radar-drag:active { cursor: grabbing; }
+.mini-nearby .mini-radar-collapse { display: grid; place-items: center; width: 30px; padding: 0; }
+.mini-nearby .weather-traffic-map { height: 240px; margin-top: 4px; }
+.mini-nearby .mini-nearby-status { margin: 4px 0 8px; font-size: 10px; }
+.mini-nearby .weather-details > summary { min-height: 28px; font-size: 10px; }
+.mini-nearby-actions { justify-content: flex-end; gap: 6px; }
+@media(max-width: 900px) {
+  .mini-nearby { left: 12px; top: 108px; width: 256px; max-height: calc(100dvh - 200px); }
+  .mini-nearby .weather-traffic-map { height: 220px; }
+  #root:has(#mobile-panel:not([hidden])) > .mini-nearby, #root:has(.aircraft-details) > .mini-nearby { display: none; }
+}
+@media(pointer: coarse) { .mini-nearby button { min-height: 40px; } .mini-nearby .mini-radar-collapse { width: 40px; } }

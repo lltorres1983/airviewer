@@ -47,8 +47,8 @@ export default function App() {
       <div id="status" className="status">
         Carregando mapa 3D livre...
       </div>
+      <MiniNearbyRadar />
       <div className="right-rail">
-        <MiniNearbyRadar />
         <div className="aircraft-details-slot">
           <AircraftDetails />
         </div>
