@@ -68,3 +68,29 @@ test('radar abre à esquerda, move pelo título e teclado e permanece dentro da 
   await expect(handle).toHaveCSS('touch-action', 'none');
   await expect(mini.getByRole('button', { name: 'Ativar radar local' })).toBeVisible();
 });
+
+test('redimensionar radar amplia o mapa e mantém tamanho ao recolher', async ({ page }) => {
+  test.setTimeout(60000);
+  await fixtures(page); await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation({ latitude: -23.4356, longitude: -46.4731, accuracy: 10 });
+  await page.setViewportSize({ width: 1440, height: 1000 }); await page.goto('/');
+  const panel = page.getByRole('region', { name: 'Radar compacto perto de mim' });
+  await panel.getByRole('button', { name: 'Ativar radar local' }).click();
+  const handle = panel.getByRole('button', { name: 'Redimensionar radar', exact: true });
+  await expect(handle).toBeVisible();
+  const before = (await panel.boundingBox())!, map = panel.locator('.weather-traffic-map'), mapBefore = (await map.boundingBox())!;
+  const grip = (await handle.boundingBox())!;
+  await page.mouse.move(grip.x+12, grip.y+12); await page.mouse.down(); await page.mouse.move(grip.x+92, grip.y+72, { steps: 8 }); await page.mouse.up();
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.width)).toBe(Math.round(before.width)+80);
+  await expect.poll(async () => Math.round((await map.boundingBox())!.height)).toBe(Math.round(mapBefore.height)+60);
+  await panel.getByRole('button', { name: 'Recolher radar compacto' }).click();
+  await panel.getByRole('button', { name: 'Expandir radar compacto' }).click();
+  expect(Math.round((await map.boundingBox())!.height)).toBe(Math.round(mapBefore.height)+60);
+  await handle.focus(); await page.keyboard.press('ArrowDown');
+  expect(Math.round((await map.boundingBox())!.height)).toBe(Math.round(mapBefore.height)+76);
+  await panel.screenshot({ path: 'test-results/radar-resized.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect((await panel.boundingBox())!.width).toBeLessThanOrEqual(366);
+  await handle.focus(); await page.keyboard.press('Home');
+  expect(Math.round((await panel.boundingBox())!.width)).toBe(256);
+});

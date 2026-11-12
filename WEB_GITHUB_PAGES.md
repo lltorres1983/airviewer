@@ -342,3 +342,14 @@ O painel de movimentos usa altura automática conforme os voos, limitada a 360 p
 antes de rolar a lista. Ao redimensionar, as listas de programação e ao vivo
 ocupam toda a área disponível, sem o antigo limite interno de 190 px. O botão
 **Ajustar** restaura a altura automática e remove apenas a altura salva.
+
+Os painéis da tela inicial (câmera, movimentos, detalhes da aeronave, identificação,
+telemetria e controles; além do diagnóstico) podem ser movidos pelo cabeçalho ou
+pelo botão de alça. As setas movem, Shift amplia o passo e Home restaura a posição.
+O arraste aceita mouse/toque e preserva botões, seletores, listas e redimensionamento.
+As posições ficam apenas na sessão da tela e são limitadas ao espaço visível.
+
+O radar compacto também pode ser redimensionado pela alça no canto inferior direito,
+após ativar a localização. O mapa cresce junto com o painel. A alça aceita toque,
+mouse e setas do teclado; Home restaura o tamanho inicial. Recolher e expandir
+preserva o tamanho durante a sessão, com limites adaptados à tela.

@@ -1,3 +1,4 @@
+import { PanelMoveHandle } from "./panel-move-handle";
 import { openObservatory } from "@/lib/observatory-ui";
 import { getAirportSnapshot } from "@/lib/airport-operations";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -118,7 +119,8 @@ function SelectedAircraft({ aircraft }: { aircraft: AircraftSelection }) {
       className="aircraft-details"
       aria-labelledby="selected-aircraft-title"
     >
-      <header className="aircraft-details-header">
+      <header className="aircraft-details-header" data-panel-drag=".aircraft-details">
+        <PanelMoveHandle panel=".aircraft-details" label="Mover detalhes da aeronave" />
         <div>
           <h2 id="selected-aircraft-title">
             {aircraft.flight || registration || aircraft.hex.toUpperCase()}

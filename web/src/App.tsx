@@ -1,3 +1,5 @@
+import { PanelMoveHandle } from "@/components/panel-move-handle";
+import { startPanelDragging } from "@/lib/panel-dragging";
 import { MiniNearbyRadar } from "@/components/mini-nearby-radar";
 import { NearbyRadar } from "@/components/nearby-radar";
 import { Observatory } from "@/components/observatory";
@@ -14,6 +16,7 @@ export default function App() {
   // Restore imperatively moved mobile nodes before React removes the page.
   useLayoutEffect(() => startAirviewer(), []);
   useEffect(() => startTrafficRecording(), []);
+  useEffect(() => startPanelDragging(), []);
   return (
     <>
       <AccountPanel />
@@ -21,7 +24,8 @@ export default function App() {
         id="map"
         aria-label="Mapa tridimensional livre acompanhando a aeronave"
       ></div>
-      <header className="topbar">
+      <header className="topbar" data-panel-drag=".topbar">
+        <PanelMoveHandle panel=".topbar" label="Mover identificação do voo" />
         <picture className="brand">
           <source
             media="(max-width: 600px)"
@@ -43,7 +47,7 @@ export default function App() {
           </div>
         </div>
       </header>
-      <div id="telemetry" className="telemetry"></div>
+      <div id="telemetry" className="telemetry" data-panel-drag=".telemetry" tabIndex={0} aria-label="Telemetria: arraste para mover ou use as setas"></div>
       <div id="status" className="status">
         Carregando mapa 3D livre...
       </div>
@@ -58,7 +62,8 @@ export default function App() {
           aria-label="Movimentos do aeroporto"
         >
         <button className="panel-resize" type="button" aria-label="Redimensionar movimentos" title="Arraste para redimensionar ou use as setas do teclado">⤢</button>
-          <div className="arrivals-header">
+          <div className="arrivals-header" data-panel-drag=".arrivals-panel">
+            <PanelMoveHandle panel=".arrivals-panel" label="Mover movimentos" />
             <strong id="arrivals-title">MOVIMENTOS</strong>
             <span id="arrivals-count">carregando</span>
             <button id="movements-fit" type="button" aria-label="Ajustar altura dos movimentos ao conteúdo">Ajustar</button>
@@ -133,7 +138,8 @@ export default function App() {
         aria-label="Camera ao vivo do aeroporto mais proximo"
       >
         <button className="panel-resize" type="button" aria-label="Redimensionar câmera" title="Arraste para redimensionar ou use as setas do teclado">⤢</button>
-        <div className="airport-camera-header">
+        <div className="airport-camera-header" data-panel-drag=".airport-camera">
+          <PanelMoveHandle panel=".airport-camera" label="Mover câmera do aeroporto" />
           <div className="airport-camera-title">
             <strong id="airport-camera-title">CAMERA AO VIVO</strong>
             <span id="airport-camera-distance">
@@ -182,6 +188,7 @@ export default function App() {
         </div>
       </aside>
       <div className="controls">
+        <PanelMoveHandle panel=".controls" label="Mover controles do mapa" />
         <label className="control-field" htmlFor="airport-select">
           Aeroporto
           <select id="airport-select">
@@ -333,7 +340,7 @@ export default function App() {
         className="diagnostics hidden"
         aria-labelledby="diagnostics-title"
       >
-        <h2 id="diagnostics-title">Diagnostico do mapa 3D</h2>
+        <h2 id="diagnostics-title" data-panel-drag=".diagnostics"><PanelMoveHandle panel=".diagnostics" label="Mover diagnóstico" />Diagnostico do mapa 3D</h2>
         <pre id="diagnostics-text">Nenhuma falha registrada.</pre>
         <div className="diagnostics-actions">
           <Button variant="secondary" id="close-diagnostics" type="button">

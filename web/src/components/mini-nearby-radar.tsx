@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useCurrentLocation, getCameraOrigin, setCameraOrigin } from '@/lib/use-current-location';
 import { useNearbyTraffic } from '@/lib/use-nearby-traffic';
 import { WeatherTrafficMap } from './weather-traffic-map';
@@ -6,6 +6,15 @@ import { WeatherTrafficMap } from './weather-traffic-map';
 export function MiniNearbyRadar() {
   const panel = useRef<HTMLElement>(null);
   const drag = useRef<{ id: number; x: number; y: number; left: number; top: number } | null>(null);
+  const resizing = useRef<{ id: number; x: number; y: number; width: number; mapHeight: number } | null>(null);
+  const [size, setSize] = useState<{ width: number; mapHeight: number } | null>(null);
+  const resize = (width: number, mapHeight: number) => {
+    const rect = panel.current!.getBoundingClientRect();
+    const map = panel.current!.querySelector<HTMLElement>('.weather-traffic-map');
+    const chrome = rect.height - (map?.offsetHeight || 240);
+    const bottom = window.innerWidth <= 900 ? 88 : 12;
+    setSize({ width: Math.max(220, Math.min(width, window.innerWidth - rect.left - 12)), mapHeight: Math.max(120, Math.min(mapHeight, window.innerHeight - rect.top - bottom - chrome)) });
+  };
   const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
   const constrain = (left: number, top: number) => {
     const rect = panel.current?.getBoundingClientRect();
@@ -26,7 +35,7 @@ export function MiniNearbyRadar() {
   const aircraft = feed.time && now - feed.time <= 60000 ? feed.aircraft : [];
   const current = aircraft.find(a => a.hex === selected);
   const openRadar = () => { setCameraOrigin(origin); window.dispatchEvent(new Event('airviewer:open-nearby')); };
-  return <section ref={panel} style={position || undefined} className="mini-nearby" aria-label="Radar compacto perto de mim">
+  return <section ref={panel} style={{ ...position, ...(size ? { width: size.width, '--mini-map-height': `${size.mapHeight}px` } : {}) } as CSSProperties} className="mini-nearby" aria-label="Radar compacto perto de mim">
     <header><h2><button className="mini-radar-drag" aria-label="Mover radar compacto" title="Arraste para mover. Use as setas do teclado; Home restaura a posição."
       onPointerDown={event => { if (event.button !== 0 || !event.isPrimary) return; const rect = panel.current!.getBoundingClientRect(); drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, left: rect.left, top: rect.top }; event.currentTarget.setPointerCapture(event.pointerId); }}
       onPointerMove={event => { const start = drag.current; if (start?.id === event.pointerId) setPosition(constrain(start.left + event.clientX - start.x, start.top + event.clientY - start.y)); }}
@@ -40,7 +49,12 @@ export function MiniNearbyRadar() {
         {current && <p>{current.flight} · {current.distance.toFixed(1)} km</p>}
       </>}
       {error && <p role="alert">{error}</p>}
-      <div className="mini-nearby-actions"><button aria-label={origin ? 'Atualizar posição' : 'Ativar radar local'} onClick={locate} disabled={locating}>{locating ? 'Localizando…' : origin ? 'Atualizar' : 'Ativar radar local'}</button><button aria-label="Abrir completo" onClick={openRadar}>Completo</button></div>
+      <div className="mini-nearby-actions"><button aria-label={origin ? 'Atualizar posição' : 'Ativar radar local'} onClick={locate} disabled={locating}>{locating ? 'Localizando…' : origin ? 'Atualizar' : 'Ativar radar local'}</button><button aria-label="Abrir completo" onClick={openRadar}>Completo</button>{origin && <button className="mini-radar-resize" aria-label="Redimensionar radar" title="Arraste para redimensionar. Setas ajustam; Home restaura o tamanho."
+        onPointerDown={event => { if (event.button !== 0 || !event.isPrimary) return; const rect = panel.current!.getBoundingClientRect(); const map = panel.current!.querySelector<HTMLElement>('.weather-traffic-map')!; resizing.current = { id: event.pointerId, x: event.clientX, y: event.clientY, width: rect.width, mapHeight: map.offsetHeight }; event.currentTarget.setPointerCapture(event.pointerId); }}
+        onPointerMove={event => { const start = resizing.current; if (start?.id === event.pointerId) resize(start.width + event.clientX - start.x, start.mapHeight + event.clientY - start.y); }}
+        onPointerUp={() => { resizing.current = null; }} onPointerCancel={() => { resizing.current = null; }} onLostPointerCapture={() => { resizing.current = null; }}
+        onKeyDown={event => { if (event.key === 'Home') { event.preventDefault(); setSize(null); return; } if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return; event.preventDefault(); const rect = panel.current!.getBoundingClientRect(); const map = panel.current!.querySelector<HTMLElement>('.weather-traffic-map')!; const step = event.shiftKey ? 40 : 16; resize(rect.width + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0), map.offsetHeight + (event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0)); }}>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 13 13 3M8 13l5-5"/></svg></button>}</div>
       {!origin && <small>Sua localização não será salva no perfil.</small>}
     </>}
   </section>;

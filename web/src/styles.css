@@ -1619,3 +1619,19 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
   #root:has(#mobile-panel:not([hidden])) > .mini-nearby, #root:has(.aircraft-details) > .mini-nearby { display: none; }
 }
 @media(pointer: coarse) { .mini-nearby button { min-height: 40px; } .mini-nearby .mini-radar-collapse { width: 40px; } }
+
+/* Shared movement handles leave embedded controls and list scrolling intact. */
+[data-panel-drag] { touch-action: none; }
+header[data-panel-drag], .arrivals-header[data-panel-drag], .airport-camera-header[data-panel-drag], .telemetry[data-panel-drag], #diagnostics-title[data-panel-drag] { cursor: grab; }
+.panel-move-handle { display: inline-grid; place-items: center; flex-shrink: 0; width: 28px; min-height: 32px; padding: 0; color: #bae6fd; background: transparent; border: 0; border-radius: 4px; cursor: grab; }
+.panel-move-handle:hover { background: #19354a; }
+.panel-move-handle:active { cursor: grabbing; }
+#diagnostics-title { display: flex; align-items: center; gap: 8px; }
+.movable-floating { position: fixed !important; left: var(--floating-left) !important; top: var(--floating-top) !important; right: auto !important; bottom: auto !important; transform: none !important; width: min(var(--panel-width, var(--floating-width)), calc(100vw - 24px)) !important; max-width: calc(100vw - 24px) !important; min-width: 0 !important; max-height: min(var(--panel-height, var(--floating-height)), calc(100dvh - 24px)) !important; min-height: 0 !important; overflow: auto; z-index: 12 !important; pointer-events: auto; }
+@media(max-width: 900px) { .movable-floating { max-height: min(var(--panel-height, var(--floating-height)), calc(100dvh - 100px)) !important; } }
+@media(pointer: coarse) { .panel-move-handle { width: 40px; min-height: 40px; } }
+
+.mini-nearby .weather-traffic-map { height: min(var(--mini-map-height, 240px), max(120px, calc(100dvh - 280px))); }
+.mini-nearby .mini-radar-resize { display: grid; place-items: center; width: 30px; padding: 0; border: 0; background: transparent; cursor: nwse-resize; touch-action: none; }
+@media(max-width: 900px) { .mini-nearby .weather-traffic-map { height: min(var(--mini-map-height, 220px), max(120px, calc(100dvh - 360px))); } }
+@media(pointer: coarse) { .mini-nearby .mini-radar-resize { width: 40px; } }
