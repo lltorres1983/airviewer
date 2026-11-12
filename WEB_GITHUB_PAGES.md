@@ -224,4 +224,28 @@ A coleta ocorre no servidor porque a [API NOAA/AWC](https://aviationweather.gov/
 não permite CORS; nenhuma chave privada é incluída no frontend.
 
 Validação: `npx playwright test tests/airport-operations.spec.ts tests/airport-spotting.spec.ts --workers=1`.
-O replay de tráfego não está incluído nesta etapa.
+
+## Central de acompanhamento
+
+- **Replay:** até uma hora de posições recebidas de GRU/GIG, com pausa,
+  seleção do horário e velocidades 1×, 5×, 10× e 30×. Cada aeroporto retém até
+  240 amostras de até 200 aeronaves no IndexedDB deste navegador. Não registra
+  o radar residencial. Lacunas superiores a um minuto não são interpoladas.
+  O histórico não é uma consulta retroativa aos arquivos da ADSB.lol; começa
+  quando este navegador recebe as posições. Sem IndexedDB, funciona em memória.
+- **GRU × GIG:** dois mapas independentes com tráfego, aproximações estimadas e
+  METAR. Reutiliza o tráfego principal recente; consulta a outra região a cada
+  20 segundos enquanto a comparação estiver aberta e a página visível. Respeita
+  `Retry-After` e oculta posições com mais de um minuto. Câmera GRU carregada
+  sob demanda; nenhuma câmera ao vivo verificada para GIG.
+- **Diário:** acesso no perfil, no detalhe da aeronave e na central. Exige conta
+  conectada, mas os registros e fotos ficam apenas no IndexedDB do dispositivo,
+  separados pelo usuário. Não exige tabela Supabase nem envia fotos ao perfil.
+  Permite criar, editar, excluir, exportar e importar JSON (limite de 50 MB e
+  1.000 registros por conta neste dispositivo, também aplicado à importação); importação preserva registros com IDs já existentes.
+  Fotos JPG/PNG/WebP de até 10 MB são redimensionadas para até 1.200 pixels e
+  reprocessadas em JPEG sem metadados. Limpar dados do navegador apaga o diário;
+  exporte backups para conservar ou transferir os registros. Não é armazenamento
+  criptografado nem sincronização em nuvem.
+
+Validação: `npx playwright test tests/observatory.spec.ts --workers=1`.

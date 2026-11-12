@@ -1,3 +1,5 @@
+import { openObservatory } from "@/lib/observatory-ui";
+import { getAirportSnapshot } from "@/lib/airport-operations";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { FavoriteButton } from "./account-panel";
 import { Button } from "./ui/button";
@@ -144,6 +146,7 @@ function SelectedAircraft({ aircraft }: { aircraft: AircraftSelection }) {
         </Button>
       </header>
       <FavoriteButton aircraft={{ hex: aircraft.hex, registration, type }} />
+      <Button variant="secondary" size="sm" onClick={() => openObservatory("diary", { hex: aircraft.hex, registration, type, flight: "", airport: ["GRU", "GIG"].includes(getAirportSnapshot().code) ? getAirportSnapshot().code : "Outro", observedAt: new Date().toISOString() })}>Registrar avistamento</Button>
       <figure
         className="selected-aircraft-photo"
         aria-busy={photoStatus === "loading"}

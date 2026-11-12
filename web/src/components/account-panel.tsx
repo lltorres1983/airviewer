@@ -1,3 +1,4 @@
+import { openObservatory } from "@/lib/observatory-ui";
 import { HomeRadarPanel } from "./home-radar-panel";
 import { Dialog } from "radix-ui";
 import { Button } from "./ui/button";
@@ -176,6 +177,7 @@ export function AccountPanel() {
                   </Button>
                 </div>
                 <HomeRadarPanel key={account.session.user.id} />
+                <Button variant="secondary" onClick={() => { account.closePanel(); openObservatory("diary"); }}>Abrir meu diário de spotting</Button>
                 <section
                   className="favorites-section"
                   aria-labelledby="favorites-title"

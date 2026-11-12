@@ -1334,3 +1334,57 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
   .spotting-panel button, .spotting-panel summary { min-height: 44px; }
   .spotting-notice { top: 90px; left: 8px; max-width: calc(100vw - 16px); }
 }
+
+/* Central de acompanhamento: mapas independentes, replay e diário local. */
+.observatory-overlay { position: fixed; inset: 0; z-index: 110; background: #020810b8; }
+.observatory-panel { position: fixed; z-index: 111; inset: 4vh 4vw; overflow: auto; background: #0c1a29; color: #e5edf5; border: 1px solid #36516b; border-radius: 14px; padding: 24px; box-shadow: 0 20px 70px #0008; }
+.observatory-header { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.observatory-panel h2 { font-size: 24px; margin: 0 0 8px; }
+.observatory-panel h3 { font-size: 19px; margin: 18px 0 10px; }
+.observatory-panel h4 { margin: 20px 0 8px; font-size: 15px; }
+.observatory-panel p { color: #bdcedd; font-size: 14px; line-height: 1.6; margin: 8px 0 16px; overflow-wrap: anywhere; }
+.observatory-panel button, .observatory-panel select, .observatory-panel input:not([type=range]), .observatory-panel textarea { font: inherit; color: #e5edf5; background: #152b40; border: 1px solid #49637a; border-radius: 6px; padding: 9px 12px; min-height: 40px; }
+.observatory-panel button { cursor: pointer; }
+.observatory-panel button:disabled { opacity: .45; cursor: default; }
+.observatory-panel :focus-visible { outline: 2px solid #7ee8ff; outline-offset: 3px; }
+.observatory-panel [role=alert] { color: #ffb5a6; }
+.observatory-tabs { display: flex; gap: 8px; border-bottom: 1px solid #36516b; padding-bottom: 14px; margin-bottom: 18px; }
+.observatory-tabs button[data-state=active] { background: #245069; border-color: #7ee8ff; }
+.observatory-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 12px 0; font-size: 14px; }
+.observatory-toolbar label { display: flex; align-items: center; gap: 8px; }
+.observatory-map { height: clamp(260px, 42vh, 520px); position: relative; border: 1px solid #36516b; border-radius: 8px; overflow: hidden; }
+.observatory-map .maplibregl-ctrl button { padding: 0; min-height: 29px; background: white; border: none; border-radius: 0; }
+.observatory-map .maplibregl-ctrl-attrib { color: #222; }
+.replay-slider { width: 100%; min-height: 34px; accent-color: #7ee8ff; }
+.observatory-flight-list { display: flex; flex-wrap: wrap; list-style: none; padding: 0; gap: 8px 24px; font-size: 13px; margin-bottom: 20px; }
+.airport-comparison { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+.airport-column { min-width: 0; }
+.airport-column h3 { color: #7ee8ff; }
+.airport-column h3 span { color: #e5edf5; font-weight: 400; margin-left: 8px; }
+.comparison-queue { list-style: none; padding: 0; }
+.comparison-queue li { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #2b4054; padding: 12px 0; }
+.comparison-queue span { display: block; color: #bdcedd; font-size: 12px; margin-top: 5px; }
+.comparison-camera { display: block; width: 100%; aspect-ratio: 16/9; border: 0; margin-top: 12px; }
+.observatory-panel .observatory-note { font-size: 12px; }
+.diary-fields { border: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; min-width: 0; }
+.diary-fields label { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 14px; }
+.diary-fields input, .diary-fields textarea, .diary-fields select { width: 100%; min-width: 0; box-sizing: border-box; }
+.diary-wide { grid-column: 1/-1; }
+.diary-import { flex-wrap: wrap; }
+.diary-import input { max-width: 100%; }
+.diary-photo-preview { display: block; max-height: 180px; max-width: 100%; margin-bottom: 12px; }
+.diary-entries { list-style: none; padding: 0; }
+.diary-entries li { display: flex; align-items: start; gap: 20px; padding: 20px 0; border-top: 1px solid #36516b; }
+.diary-entries li > img { width: 180px; max-height: 150px; object-fit: contain; }
+.diary-entries li > div { min-width: 0; }
+.diary-notes { white-space: pre-wrap; }
+@media(max-width: 800px) {
+  .observatory-panel { inset: 10px; padding: 16px; border-radius: 10px; }
+  .observatory-panel h2 { font-size: 20px; }
+  .airport-comparison, .diary-fields { grid-template-columns: minmax(0, 1fr); }
+  .airport-column + .airport-column { border-top: 1px solid #49637a; padding-top: 12px; }
+  .observatory-tabs { gap: 6px; }
+  .observatory-tabs button { padding: 8px; flex: 1; }
+  .diary-entries li { flex-direction: column; }
+  .observatory-panel input[type=file] { width: 100%; }
+}

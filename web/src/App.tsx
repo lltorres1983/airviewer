@@ -1,3 +1,5 @@
+import { Observatory } from "@/components/observatory";
+import { startTrafficRecording } from "@/lib/traffic-recording";
 import { AirportSpotting } from "@/components/airport-spotting";
 import { HomeRadarTrigger } from "@/components/home-radar-panel";
 import { useEffect } from "react";
@@ -8,6 +10,7 @@ import { startAirviewer } from "@/lib/airviewer";
 
 export default function App() {
   useEffect(() => startAirviewer(), []);
+  useEffect(() => startTrafficRecording(), []);
   return (
     <>
       <AccountPanel />
@@ -311,6 +314,7 @@ export default function App() {
         </Button>
         <HomeRadarTrigger />
         <AirportSpotting />
+        <Observatory />
         <Button variant="secondary" id="show-diagnostics" type="button">
           Diagnostico
         </Button>
