@@ -1,3 +1,5 @@
+import { RadarScope } from "./radar-scope";
+import { LocalWeather } from "./local-weather";
 import { useEffect, useRef, useState } from 'react';
 import { Dialog } from 'radix-ui';
 import { Button } from './ui/button';
@@ -71,33 +73,19 @@ function NearbyRadarContent() {
   const current = aircraft.find(a => a.hex === selected);
   const locationFresh = Boolean(origin && now - origin.time <= 120000 && origin.accuracy <= 100);
   return <>
-    <p>Use onde você estiver, sem entrar na conta nem alterar o endereço de casa. Para buscar os voos, as coordenadas são enviadas à fonte ADS-B pelo proxy; a câmera permanece no celular.</p>
+    <p>Use onde você estiver, sem entrar na conta nem alterar o endereço de casa. Para buscar os voos, as coordenadas são enviadas à fonte ADS-B pelo proxy e à Open-Meteo para a meteorologia; a câmera permanece no celular.</p>
     <div className="observatory-toolbar"><button onClick={locate} disabled={locating}>{locating ? 'Obtendo localização…' : origin ? 'Atualizar minha localização' : 'Usar localização agora'}</button><label>Raio <select aria-label="Raio do radar" value={radius} onChange={e => { setRadius(Number(e.target.value)); setSelected(''); }}><option value="5">5 km</option><option value="10">10 km</option><option value="20">20 km</option></select></label>{origin && <button onClick={() => cameraSection.current?.scrollIntoView({ block: 'start' })}>Ir para câmera</button>}</div>
     {locationError && <p role="alert">{locationError}</p>}
     {origin && <>
       <p>Posição obtida às {new Date(origin.time).toLocaleTimeString('pt-BR')} · precisão de aproximadamente {Math.round(origin.accuracy)} m. Atualize se você se deslocar.</p>
       {!locationFresh && <p role="status">Atualize a localização em uma área aberta para usar o guia da câmera (precisão de até 100 m e posição recente).</p>}
       <div className="nearby-layout"><section aria-label="Radar da localização atual">
-        <svg className="nearby-radar" viewBox="0 0 360 360" role="group" aria-label={`Radar com norte no topo, raio de ${radius} quilômetros`}>
-          <circle cx="180" cy="180" r="150" fill="#10273b" stroke="#52738d" />
-          <circle cx="180" cy="180" r="75" fill="none" stroke="#52738d" strokeDasharray="4 5" />
-          <path d="M180 30v300M30 180h300" stroke="#36516b" />
-          <text x="180" y="20" textAnchor="middle">N</text><text x="343" y="185">L</text><text x="180" y="350" textAnchor="middle">S</text><text x="8" y="185">O</text>
-          <text x="185" y="104">{radius / 2} km</text><text x="185" y="40">{radius} km</text>
-          <circle cx="180" cy="180" r="5" fill="#fbbf67" /><text x="190" y="198">Você</text>
-          {aircraft.map((a, index) => {
-            const radians = a.bearing * Math.PI / 180, distance = a.distance / radius * 150;
-            const x = 180 + Math.sin(radians) * distance, y = 180 - Math.cos(radians) * distance;
-            return <g key={a.hex} transform={`translate(${x},${y})`} role="button" tabIndex={0} aria-label={`Ver ${a.flight}`} aria-pressed={a.hex === selected} onClick={() => setSelected(a.hex)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelected(a.hex); } }}>
-              <circle r="14" fill={a.hex === selected ? '#fbbf67' : '#7ee8ff'} stroke="#071521" strokeWidth="2" /><text y="4" textAnchor="middle" fill="#071521">{index + 1}</text>
-            </g>;
-          })}
-        </svg>
+        <RadarScope aircraft={aircraft} radius={radius} selected={selected} onSelect={setSelected} fresh={Boolean(feed.time && now - feed.time <= 60000)} />
         <p role="status">{feed.message || (!feed.time ? 'Consultando tráfego…' : now - feed.time > 60000 ? 'Sinal desatualizado. Aguardando posições recentes.' : `${aircraft.length} aeronaves próximas · atualização ${new Date(feed.time).toLocaleTimeString('pt-BR')}`)}</p>
         {current && <p className="nearby-selection"><strong>{current.flight}</strong> · {current.registration || current.hex} · {current.type || 'Modelo não informado'} · {current.distance.toFixed(1)} km · direção {Math.round(current.bearing)}°</p>}
         <ol className="nearby-flights">{aircraft.map(a => <li key={a.hex}><button aria-pressed={a.hex === selected} onClick={() => setSelected(a.hex)}>{a.flight} · {a.distance.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km <small>{a.altitude === null ? 'Altitude indisponível' : `${Math.round(a.altitude).toLocaleString('pt-BR')} pés`}</small></button></li>)}</ol>
         <p className="observatory-note">Posições <a href="https://www.adsb.lol/" target="_blank" rel="noopener noreferrer">ADSB.lol</a> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">ODbL</a>. Nem toda aeronave estará disponível.</p>
-      </section><div ref={cameraSection}><SkyCamera aircraft={aircraft} locationFresh={locationFresh} now={now} /></div></div>
+      </section><div><LocalWeather origin={origin} now={now} /><div ref={cameraSection}><SkyCamera aircraft={aircraft} locationFresh={locationFresh} now={now} /></div></div></div>
     </>}
   </>;
 }

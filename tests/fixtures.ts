@@ -25,6 +25,7 @@ export async function fixtures(page: Page, aircraft?: AdsbAircraft[]) {
       return route.fulfill({
         json: { tilejson: "3.0.0", tiles: [], vector_layers: [] },
       });
+    if (url.includes("api.open-meteo.com")) return route.fulfill({ json: localWeatherFixture() });
     if (url.includes("api.adsb.lol"))
       return route.fulfill({
         json: {
@@ -73,4 +74,10 @@ export async function fixtures(page: Page, aircraft?: AdsbAircraft[]) {
       },
     }),
   );
+}
+
+export function localWeatherFixture(time = Math.floor(Date.now() / 1000)) {
+  return { current: { time, interval: 900, temperature_2m: 24.5, apparent_temperature: 26, relative_humidity_2m: 70,
+    precipitation: .2, weather_code: 61, cloud_cover: 80, wind_speed_10m: 12, wind_direction_10m: 90, wind_gusts_10m: 25 },
+    current_units: { temperature_2m: '°C', wind_speed_10m: 'km/h', precipitation: 'mm' } };
 }

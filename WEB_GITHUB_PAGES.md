@@ -288,3 +288,19 @@ A validação automatizada usa câmera e sensores simulados; alinhamento físico
 precisão da bússola e permissões precisam de validação em aparelhos reais.
 
 Validação: `npx playwright test tests/nearby-radar.spec.ts --workers=1`.
+
+O radar local tem apresentação circular inspirada em PPI: anéis de distância,
+marcações de 5°, rumos de 30°, norte fixo, centro na posição obtida e alvos ADS-B
+selecionáveis. A varredura verde é apenas ilustrativa e não determina quando
+uma aeronave aparece; pode ser pausada e respeita `prefers-reduced-motion`.
+Sem tráfego recente, a animação fica pausada.
+
+A meteorologia local usa a [Forecast API da Open-Meteo](https://open-meteo.com/en/docs),
+com coordenadas arredondadas a três casas decimais, sem gravá-las no perfil.
+Mostra temperatura, sensação, umidade, nebulosidade, vento, rajadas e precipitação
+no intervalo informado pela API. São estimativas de modelos, não METAR nem radar
+de chuva. Atualiza a cada dez minutos enquanto o painel estiver aberto e a aba
+visível, permite atualização manual, cancela consultas ao mudar de local/fechar
+e sinaliza dados com mais de 90 minutos. Valores ausentes nunca viram zero.
+
+Validação: `npx playwright test tests/local-weather.spec.ts tests/nearby-radar.spec.ts --workers=1`.

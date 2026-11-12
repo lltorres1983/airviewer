@@ -1437,3 +1437,36 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
 .sky-calibration { display: block; margin: 16px 0; font-size: 14px; }
 .sky-calibration input { display: block; width: 100%; accent-color: #7ee8ff; min-height: 40px; }
 @media(max-width: 800px) { .nearby-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; } .sky-view { min-height: 380px; } }
+
+/* PPI-inspired display: range/bearing stay geographic; the sweep is illustrative. */
+.radar-scope { padding: 14px; color: #b7f2d0; background: #05130d; border: 1px solid #3e7959; border-radius: 12px; }
+.radar-scope-readout, .radar-scope-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.radar-scope-readout strong { font-size: 12px; }
+.radar-scope .radar-scope-screen { width: 100%; max-width: 560px; margin: 14px auto; }
+.radar-scope-screen .radar-bearing-label { fill: #b7f2d0; font-size: 14px; }
+.radar-scope-screen .radar-range-label { fill: #9ddab8; font-size: 13px; paint-order: stroke; stroke: #061b12; stroke-width: 3px; }
+.radar-sweep { transform-origin: 50% 50%; transform-box: view-box; animation: radar-sweep 8s linear infinite; pointer-events: none; }
+.radar-sweep[data-running=false] { animation-play-state: paused; opacity: .15; }
+@keyframes radar-sweep { to { transform: rotate(360deg); } }
+.radar-scope-screen .radar-target-echo { fill: #8ef0b6; stroke: #05130d; stroke-width: 1px; }
+.radar-scope-screen .radar-target-ring { stroke: transparent; }
+.radar-scope-screen .radar-target[aria-pressed=true] .radar-target-echo { fill: #fbbf67; }
+.radar-scope-screen .radar-target[aria-pressed=true] .radar-target-ring { stroke: #fbbf67; }
+.radar-scope-screen .radar-target:hover .radar-target-ring, .radar-scope-screen .radar-target:focus-visible .radar-target-ring { stroke: #fff; stroke-width: 2px; }
+.radar-scope-screen g.radar-target text { fill: #d6ffe7; font-size: 12px; paint-order: stroke; stroke: #05130d; stroke-width: 3px; }
+.observatory-panel .radar-scope-footer button { font-size: 12px; min-height: 36px; padding: 6px 10px; border-color: #3e7959; color: #b7f2d0; background: #10291c; }
+.observatory-panel .radar-scope-note { font-size: 11px; line-height: 1.5; margin: 12px 0 0; color: #a6d6bb; }
+.local-weather { border-top: 1px solid #49637a; margin-top: 24px; padding-top: 16px; }
+.local-weather-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.local-weather-heading h3 { margin: 0; }
+.local-weather-summary { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; margin: 20px 0; }
+.local-weather-summary > strong { font-size: 30px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.local-weather-summary small { display: block; color: #bdcedd; font-size: 12px; margin-top: 5px; }
+.local-weather-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; margin: 16px 0; }
+.local-weather-details dt { font-size: 12px; color: #bdcedd; }
+.local-weather-details dd { margin: 4px 0 0; font-size: 15px; font-variant-numeric: tabular-nums; }
+.local-weather-details > div:last-child { grid-column: 1 / -1; }
+.observatory-panel .local-weather-stale { color: #fbbf67; }
+@media(prefers-reduced-motion: reduce) { .radar-sweep { animation: none; opacity: .2; } }
+
+.nearby-layout > div > .local-weather { margin: 0 0 28px; padding-top: 0; border-top: 0; }
