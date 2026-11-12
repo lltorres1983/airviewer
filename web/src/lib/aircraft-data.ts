@@ -114,6 +114,7 @@ export async function fetchRegistration(
 export async function fetchAircraftPhoto(
   registration: string,
   signal: AbortSignal,
+  size: "small" | "large" = "large",
 ): Promise<AircraftPhoto | null> {
   const prefix = registration.trim().toUpperCase();
   if (!/^[A-Z0-9-]{2,12}$/.test(prefix)) return null;
@@ -125,7 +126,9 @@ export async function fetchAircraftPhoto(
   for (const value of data.photos) {
     const photo = object(value);
     const src = httpsUrl(
-      object(photo.thumbnail_large).src || object(photo.thumbnail).src,
+      size === "small"
+        ? object(photo.thumbnail).src || object(photo.thumbnail_large).src
+        : object(photo.thumbnail_large).src || object(photo.thumbnail).src,
       ["t.plnspttrs.net"],
     );
     const link = httpsUrl(photo.link, [

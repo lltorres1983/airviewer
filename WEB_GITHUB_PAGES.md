@@ -304,3 +304,9 @@ visível, permite atualização manual, cancela consultas ao mudar de local/fech
 e sinaliza dados com mais de 90 minutos. Valores ausentes nunca viram zero.
 
 Validação: `npx playwright test tests/local-weather.spec.ts tests/nearby-radar.spec.ts --workers=1`.
+
+Os possíveis voos no guia da câmera incluem miniaturas da aeronave pela matrícula,
+com crédito ao fotógrafo e link para a imagem original no Planespotters. Sem
+matrícula, foto disponível ou imagem válida, o voo permanece visível com “Sem
+foto”. As consultas são canceladas ao retirar o candidato e usam cache limitado
+em memória para evitar consultas repetidas ao movimentar o celular.

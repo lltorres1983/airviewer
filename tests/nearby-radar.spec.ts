@@ -51,6 +51,11 @@ test('radar temporário, câmera por direção e encerramento dos recursos', asy
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await mockCamera(page);
   const panel = await setup(page);
+  await page.route('https://api.planespotters.net/pub/photos/reg/PT-ABC', route => route.fulfill({ json: { photos: [{
+    thumbnail: { src: 'https://t.plnspttrs.net/sky-small.jpg' }, thumbnail_large: { src: 'https://t.plnspttrs.net/sky-large.jpg' },
+    link: 'https://www.planespotters.net/photo/sky-test', photographer: 'Fotógrafo de teste',
+  }] } }));
+  await page.route('https://t.plnspttrs.net/sky-small.jpg', route => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180"><rect width="240" height="180" fill="#b9d4e6"/><text x="120" y="90" text-anchor="middle" fill="#132b40" font-size="20">FOTO DE TESTE</text></svg>' }));
   await expect(panel.getByRole('button', { name: 'Ver NEAR1000', exact: true })).toBeVisible();
   await panel.getByRole('button', { name: 'Ver NEAR1000', exact: true }).click();
   await expect(panel.locator('.nearby-selection')).toContainText('PT-ABC');
@@ -68,6 +73,18 @@ test('radar temporário, câmera por direção e encerramento dos recursos', asy
   });
   await expect(panel.locator('.sky-candidates')).toContainText('NEAR1000');
   await expect(panel.locator('.sky-candidates')).not.toContainText('EAST2000');
+  const thumbnail = panel.getByRole('img', { name: 'Foto de PT-ABC', exact: true });
+  await expect(thumbnail).toHaveAttribute('src', 'https://t.plnspttrs.net/sky-small.jpg');
+  await expect(panel.locator('.sky-candidates')).toContainText('Foto: Fotógrafo de teste');
+  await expect(panel.getByRole('link', { name: 'Abrir foto de PT-ABC no Planespotters' })).toHaveAttribute('href', 'https://www.planespotters.net/photo/sky-test');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await panel.locator('.sky-view').screenshot({ path: 'test-results/sky-photo-mobile.png' });
+  expect(await panel.locator('.sky-candidates').evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+  await thumbnail.evaluate(image => image.dispatchEvent(new Event('error')));
+  await expect(panel.locator('.sky-candidates')).toContainText('Sem foto');
+  await expect(thumbnail).toHaveCount(0);
+  await expect(panel.locator('.sky-candidates')).toContainText('NEAR1000');
+  await page.setViewportSize({ width: 1280, height: 720 });
   expect(await page.evaluate(() => (window as unknown as { cameraTest: { audio: boolean } }).cameraTest.audio)).toBe(false);
   expect(await page.evaluate(() => (window as unknown as { cameraTest: { requestedAbsolute: boolean } }).cameraTest.requestedAbsolute)).toBe(true);
   expect(await page.evaluate(() => (window as unknown as { cameraTest: { facingMode: string } }).cameraTest.facingMode)).toContain('environment');

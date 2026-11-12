@@ -1,3 +1,4 @@
+import { SkyCandidate } from "./sky-candidate";
 import { RadarScope } from "./radar-scope";
 import { LocalWeather } from "./local-weather";
 import { useEffect, useRef, useState } from 'react';
@@ -168,7 +169,7 @@ function SkyCamera({ aircraft, locationFresh, now }: { aircraft: NearbyAircraft[
       {!enabled && <p className="sky-placeholder">Ative a câmera traseira para procurar voos nesta direção.</p>}
       {enabled && <div className="sky-overlay"><p>{heading === null ? 'Sem direção confiável' : `Direção aproximada: ${Math.round(heading)}°`}</p><div className="sky-candidates">
         {heading !== null && <strong>Possíveis voos à frente · ±20°</strong>}
-        {candidates.map(a => <p key={a.hex}><strong>{a.flight}</strong> · {a.type || a.registration || a.hex}<br />{a.distance.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km · direção {Math.round(a.bearing)}°</p>)}
+        {candidates.map(a => <SkyCandidate key={`${a.hex}:${a.registration}`} aircraft={a} />)}
         {heading !== null && !candidates.length && <p>Nenhum voo com sinal recente nesta direção.</p>}
         {heading === null && <p>Segure o celular em pé, sem inclinar para os lados. Mova-o suavemente; se a bússola não responder, use o radar.</p>}
       </div></div>}
