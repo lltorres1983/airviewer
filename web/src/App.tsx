@@ -1,3 +1,4 @@
+import { NearbyRadar } from "@/components/nearby-radar";
 import { Observatory } from "@/components/observatory";
 import { startTrafficRecording } from "@/lib/traffic-recording";
 import { AirportSpotting } from "@/components/airport-spotting";
@@ -313,6 +314,7 @@ export default function App() {
           Camera aeroporto
         </Button>
         <HomeRadarTrigger />
+        <NearbyRadar />
         <AirportSpotting />
         <Observatory />
         <Button variant="secondary" id="show-diagnostics" type="button">

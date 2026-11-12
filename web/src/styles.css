@@ -1413,3 +1413,27 @@ body[data-home-radar="true"] label:has(#camera-size-control) { display: none; }
 .approach-flight-metrics { font-size: 13px; font-variant-numeric: tabular-nums; }
 .approach-flight-info small { color: #bdcedd; font-size: 12px; }
 .approach-flight-action { color: #7ee8ff; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; margin-top: 3px; }
+
+.nearby-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+.nearby-layout > section { min-width: 0; }
+.nearby-radar { display: block; width: min(100%, 480px); margin: 0 auto; }
+.nearby-radar text { fill: #e0f2fe; font-size: 12px; font-family: inherit; }
+.nearby-radar g[role=button] { cursor: pointer; }
+.nearby-radar g[role=button] text { fill: #071521; font-weight: 700; }
+.nearby-radar g:focus-visible circle { stroke: white; stroke-width: 4px; }
+.nearby-flights { padding-left: 26px; max-height: 260px; overflow-y: auto; }
+.nearby-flights li { padding: 5px 0; }
+.nearby-flights button { width: 100%; text-align: left; }
+.nearby-flights button[aria-pressed=true] { border-color: #fbbf67; }
+.nearby-flights small { display: block; color: #bdcedd; margin-top: 4px; }
+.nearby-selection { padding: 12px; border: 1px solid #fbbf67; }
+.nearby-panel a { color: #7ee8ff; text-decoration: underline; }
+.sky-view { position: relative; min-height: 420px; aspect-ratio: 3/4; max-height: 70vh; overflow: hidden; border: 1px solid #49637a; border-radius: 10px; background: #03090e; }
+.sky-view video { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; }
+.sky-placeholder { position: absolute; inset: 0; display: grid; place-content: center; padding: 28px; text-align: center; }
+.sky-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; pointer-events: none; }
+.sky-overlay > p, .sky-candidates { padding: 10px 12px; background: #071521ed; border-radius: 6px; color: #e0f2fe; font-size: 13px; }
+.sky-candidates p { margin: 6px 0; font-size: 13px; }
+.sky-calibration { display: block; margin: 16px 0; font-size: 14px; }
+.sky-calibration input { display: block; width: 100%; accent-color: #7ee8ff; min-height: 40px; }
+@media(max-width: 800px) { .nearby-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; } .sky-view { min-height: 380px; } }

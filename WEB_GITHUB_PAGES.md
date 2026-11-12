@@ -256,3 +256,35 @@ altitude e tempo estimado. O voo mais próximo fica destacado. Na torre, clicar
 acompanha a aeronave; na comparação, abre o registro no diário. A pista permanece
 indicada como provável ou indeterminada; o diagrama não representa autorização
 ou sequência oficial de pouso.
+
+## Radar perto de mim e guia pela câmera
+
+O botão **Radar perto de mim** funciona sem login. Solicita uma posição atual,
+exibe aeronaves em círculos de 5/10/20 km e permite consultar matrícula, altitude
+e direção. A posição não é salva no perfil, no diário ou no replay. O usuário
+atualiza manualmente caso se desloque; as coordenadas são enviadas à ADSB.lol
+pelo proxy existente para consultar o tráfego. A consulta ocorre a cada 20 s,
+com cancelamento ao fechar, pausa em segundo plano e tratamento de `Retry-After`.
+Posições de aeronaves com idade superior a 30 s são descartadas na recepção;
+o conjunto deixa de ser exibido após 60 s sem atualização.
+
+**Apontar para o céu** é um guia experimental por azimute: usa apenas câmera
+traseira, sem áudio, e compara a direção com até três voos dentro de ±20°.
+Não há reconhecimento visual nem projeção precisa da aeronave sobre pixels;
+os possíveis voos aparecem em uma legenda sobre o vídeo. Não filtra por ângulo
+de elevação. Funciona com o celular em pé, sem grande inclinação lateral.
+Sem direção absoluta confiável, permissão ou posição recente (até 2 min e
+precisão de até 100 m), não sugere correspondências. A correção manual da
+bússola permite compensar um desvio conhecido. Fotos e vídeo não são enviados
+nem armazenados; todos os tracks são encerrados ao fechar ou ocultar a página,
+inclusive quando uma solicitação de câmera termina depois do fechamento.
+
+A implementação considera `deviceorientationabsolute` e `webkitCompassHeading`,
+com permissão solicitada pelo clique. Referências: [orientação da câmera na
+W3C](https://www.w3.org/TR/orientation-event/#worked-example), [permissão dos
+sensores](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/requestPermission_static)
+e [API da Apple](https://developer.apple.com/documentation/webkitjs/deviceorientationevent).
+A validação automatizada usa câmera e sensores simulados; alinhamento físico,
+precisão da bússola e permissões precisam de validação em aparelhos reais.
+
+Validação: `npx playwright test tests/nearby-radar.spec.ts --workers=1`.
