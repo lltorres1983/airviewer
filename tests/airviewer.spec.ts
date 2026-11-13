@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { fixtures } from "./fixtures";
+import { fixtures, openLegacyMovements } from "./fixtures";
 
 test("mapa, shadcn, programação, seleção e controles no desktop", async ({
   page,
@@ -10,6 +10,7 @@ test("mapa, shadcn, programação, seleção e controles no desktop", async ({
   await fixtures(page);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
+  if ((page.viewportSize()?.width || 1280) > 900) await openLegacyMovements(page);
   await expect(page.getByAltText("Airviewer")).toBeVisible();
   await expect(page.locator(".maplibregl-canvas")).toBeVisible();
   await expect.poll(() => page.workers().length).toBeGreaterThan(0);
@@ -46,11 +47,13 @@ test("menu, voos e câmera no celular, com retorno ao desktop", async ({
   await fixtures(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  if ((page.viewportSize()?.width || 1280) > 900) await openLegacyMovements(page);
   await page.locator("#mobile-menu-toggle").click();
   await expect(page.locator("#mobile-options #airport-select")).toBeVisible();
   await page
-    .getByRole("button", { name: "Próximos voos", exact: true })
+    .getByRole("button", { name: "Fila de aproximação", exact: true })
     .click();
+  await openLegacyMovements(page);
   await expect(page.locator(".schedule-row")).toBeVisible();
   await page.screenshot({ path: "test-results/mobile-flights.png" });
   await page.locator(".schedule-row").click();
@@ -87,6 +90,7 @@ test("falhas nas APIs exibem estado de indisponibilidade", async ({ page }) => {
     route.fulfill({ status: 503, body: "" }),
   );
   await page.goto("/");
+  if ((page.viewportSize()?.width || 1280) > 900) await openLegacyMovements(page);
   await expect(page.locator("#schedule-list")).toContainText(
     "Programação temporariamente indisponível",
   );
@@ -100,8 +104,9 @@ test("redimensiona painéis e preserva o tamanho após recarregar", async ({ pag
   await fixtures(page);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
+  if ((page.viewportSize()?.width || 1280) > 900) await openLegacyMovements(page);
   const panel = page.locator("#arrivals-panel");
-  const handle = page.getByRole("button", { name: "Redimensionar movimentos", exact: true });
+  const handle = page.getByRole("button", { name: "Redimensionar torre e spotting", exact: true });
   await expect(handle).toBeVisible();
   const initial = (await panel.boundingBox())!;
   await handle.focus();
@@ -126,6 +131,7 @@ for (const tab of ['schedule', 'live']) {
       lat:-23.4, lon:-46.3, alt_baro:5000, track:120, baro_rate:-500, gs:180, seen_pos:1}]);
     await page.setViewportSize({width:1440,height:1000});
     await page.goto('/');
+  if ((page.viewportSize()?.width || 1280) > 900) await openLegacyMovements(page);
     await expect.poll(() => page.locator('html').getAttribute('data-airport-traffic-received-at')).not.toBeNull();
     await page.getByRole('button',{name:'Leste',exact:true}).click();
     const zoom = await page.locator('#zoom-control').inputValue();
@@ -152,6 +158,7 @@ test('programação busca o voo fora da área do aeroporto e centraliza sua posi
   }]}}));
   await page.setViewportSize({width:1440,height:1000});
   await page.goto('/');
+  if ((page.viewportSize()?.width || 1280) > 900) await openLegacyMovements(page);
   await expect.poll(() => page.locator('html').getAttribute('data-airport-traffic-received-at')).not.toBeNull();
   await page.locator('.schedule-row').click();
   await expect(page.locator('.aircraft-details-header')).toContainText('PT-ABC');
@@ -170,7 +177,8 @@ test('programação não seleciona posição antiga ou de outro voo', async ({pa
     {hex:'abc123', flight:'TAM1234', lat:-22.9, lon:-43.2, seen_pos:120},
     {hex:'abc124', flight:'TAM9999', lat:-22.9, lon:-43.2, seen_pos:1},
   ]}}));
-  await page.goto('/');await page.locator('.schedule-row').click();
+  await page.goto('/');
+  if ((page.viewportSize()?.width || 1280) > 900) await openLegacyMovements(page);await page.locator('.schedule-row').click();
   await expect(page.locator('#status')).toContainText('sem posição ADS-B disponível');
   await expect(page.locator('.aircraft-marker')).toBeHidden();
   await expect(page.locator('.aircraft-details')).toHaveCount(0);
@@ -184,6 +192,7 @@ test('resposta atrasada da programação não troca a seleção de aeroporto', a
     await wait;await route.fulfill({json:{ac:[{hex:'abc123',flight:'TAM1234',lat:-22.9,lon:-43.2,seen_pos:1}]}});
   });
   await page.goto('/');
+  if ((page.viewportSize()?.width || 1280) > 900) await openLegacyMovements(page);
   const requested=page.waitForRequest('**/v2/callsign/TAM1234');
   await page.locator('.schedule-row').click();await requested;
   await page.locator('#airport-select').selectOption('SDU');

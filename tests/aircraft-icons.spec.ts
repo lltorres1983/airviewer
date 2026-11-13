@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { aircraftIconKind } from '../web/src/lib/aircraft-icons';
-import { fixtures } from './fixtures';
+import { fixtures, openLegacyMovements } from './fixtures';
 
 test('classifica modelos ICAO e mantém padrão para modelos desconhecidos', () => {
   for (const [model, kind] of Object.entries({
@@ -23,6 +23,7 @@ test('seleção troca a silhueta entre Airbus, Boeing, avião pesado, A380 e mod
   })));
   await page.setViewportSize({width:1440,height:1000});
   await page.goto('/');
+  if ((page.viewportSize()?.width || 1280) > 900) await openLegacyMovements(page);
   await page.locator('#live-tab').click();
   const icons = [];
   for (const [i, kind] of ['airbus', 'boeing', 'heavy', 'superjumbo', 'generic'].entries()) {

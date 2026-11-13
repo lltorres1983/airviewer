@@ -1666,3 +1666,35 @@ header[data-panel-drag], .arrivals-header[data-panel-drag], .airport-camera-head
 .mini-nearby .weather-details > :not(summary) { margin-left: 8px; margin-right: 8px; }
 @media(max-width: 900px) { .mini-nearby .weather-traffic-map { height: min(var(--mini-map-height, 240px), max(120px, calc(100dvh - 300px))); } .mobile-panel .airport-camera-video-grid { flex: none; } .mobile-panel .airport-camera-feed { height: auto; } }
 @media(pointer: coarse) { .mini-nearby-actions button, .mini-nearby .mini-radar-collapse, .airport-camera-header .panel-move-handle, .airport-camera-header .airport-camera-close, .camera-info summary { min-height: 40px; min-width: 32px; } }
+
+/* Default airport panel: the visual approach queue, with secondary tools folded. */
+.arrivals-panel.tower-dock { max-height: var(--panel-height, 540px); }
+.tower-dock > .tower-compact { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; }
+.tower-compact-heading { display: flex; flex-shrink: 0; align-items: center; gap: 6px; padding: 5px 8px; border-bottom: 1px solid #294258; }
+.tower-compact-heading h2 { flex: 1; margin: 0; font-size: 14px; font-weight: 600; }
+.tower-compact-heading h2 span { color: #7ee8ff; margin-left: 4px; }
+.tower-compact button, .tower-compact select { color: #dff5ff; background: #10273b; border: 1px solid #36516b; border-radius: 4px; min-height: 30px; padding: 4px 8px; font: inherit; font-size: 11px; }
+.tower-compact .panel-move-handle { padding: 0; border: 0; background: transparent; }
+.tower-compact-controls { display: flex; flex-shrink: 0; justify-content: space-between; align-items: center; gap: 12px; padding: 8px; }
+.tower-compact-controls > div { display: flex; gap: 4px; }
+.tower-compact-controls button[aria-pressed=true] { color: #071521; background: #7ee8ff; }
+.tower-compact-controls select { min-width: 0; max-width: 60%; }
+.tower-queue-heading { display: flex; flex-shrink: 0; justify-content: space-between; align-items: center; padding: 4px 12px 8px; }
+.tower-queue-heading h3 { font-size: 12px; margin: 0; }
+.tower-queue-heading > span { font-size: 11px; color: #bdcedd; }
+.tower-queue-content { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 8px; }
+.tower-queue-content > p { font-size: 12px; padding: 12px 4px; color: #bdcedd; }
+.tower-queue-content .approach-destination { padding: 6px 8px; gap: 12px; }
+.tower-queue-content .approach-runway { height: 42px; }
+.tower-queue-content .approach-destination strong { font-size: 12px; }
+.tower-queue-content .approach-destination span, .tower-queue-content .approach-destination small { font-size: 10px; }
+.tower-queue-content .visual-approach-list { margin: 8px 0; }
+.tower-queue-content .visual-approach-flight { padding: 8px; }
+.tower-queue-content .approach-flight-title { font-size: 12px; }
+.tower-queue-content .approach-flight-action { display: none; }
+.tower-queue-note { flex-shrink: 0; margin: 0; padding: 8px 12px; color: #bdcedd; font-size: 10px; line-height: 1.4; }
+.tower-other-movements { flex-shrink: 0; border-top: 1px solid #294258; font-size: 11px; }
+.tower-other-movements > summary { min-height: 32px; padding: 8px 12px 8px 32px; cursor: pointer; color: #bdcedd; }
+.tower-other-movements[open] { max-height: 45vh; overflow: auto; }
+.tower-other-movements .arrivals-list, .tower-other-movements .schedule-list { max-height: 260px; }
+@media(max-width: 900px) { .mobile-panel .tower-dock { max-height: none; } .tower-queue-content { overflow: visible; } .tower-compact button, .tower-compact select { min-height: 40px; } }

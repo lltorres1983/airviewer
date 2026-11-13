@@ -1,3 +1,4 @@
+import { TowerQueuePanel } from "@/components/tower-queue-panel";
 import { PanelMoveHandle } from "@/components/panel-move-handle";
 import { startPanelDragging } from "@/lib/panel-dragging";
 import { MiniNearbyRadar } from "@/components/mini-nearby-radar";
@@ -58,10 +59,12 @@ export default function App() {
         </div>
         <aside
           id="arrivals-panel"
-          className="arrivals-panel hidden"
-          aria-label="Movimentos do aeroporto"
+          className="arrivals-panel tower-dock hidden"
+          aria-label="Torre e spotting do aeroporto"
         >
-        <button className="panel-resize" type="button" aria-label="Redimensionar movimentos" title="Arraste para redimensionar ou use as setas do teclado">⤢</button>
+        <button className="panel-resize" type="button" aria-label="Redimensionar torre e spotting" title="Arraste para redimensionar ou use as setas do teclado">⤢</button>
+          <TowerQueuePanel />
+          <details className="tower-other-movements"><summary>Programação e outros movimentos</summary>
           <div className="arrivals-header" data-panel-drag=".arrivals-panel">
             <PanelMoveHandle panel=".arrivals-panel" label="Mover movimentos" />
             <strong id="arrivals-title">MOVIMENTOS</strong>
@@ -130,6 +133,7 @@ export default function App() {
           <div id="live-view" className="traffic-view hidden">
             <div id="arrivals-list" className="arrivals-list"></div>
           </div>
+          </details>
         </aside>
       </div>
       <aside
@@ -379,7 +383,7 @@ export default function App() {
               type="button"
               data-mobile-view="flights"
             >
-              Próximos voos
+              Fila de aproximação
             </Button>
           </div>
           <div id="mobile-camera" hidden>

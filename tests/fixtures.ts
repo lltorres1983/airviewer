@@ -84,3 +84,9 @@ export function localWeatherFixture(time = Math.floor(Date.now() / 1000)) {
     precipitation: .2, weather_code: 61, cloud_cover: 80, wind_speed_10m: 12, wind_direction_10m: 90, wind_gusts_10m: 25 },
     current_units: { temperature_2m: '°C', wind_speed_10m: 'km/h', precipitation: 'mm' } };
 }
+
+// Existing traffic-list regressions explicitly open the secondary legacy view.
+export async function openLegacyMovements(page: Page) {
+  const details = page.locator('.tower-other-movements');
+  if (await details.getAttribute('open') === null) await details.locator(':scope > summary').click();
+}

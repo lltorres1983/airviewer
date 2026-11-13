@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { fixtures } from "./fixtures";
+import { fixtures, openLegacyMovements } from "./fixtures";
 
 const firstAircraft = {
   hex: "abc123",
@@ -78,6 +78,7 @@ async function detailsFixtures(page: Page) {
 }
 
 async function selectFromList(page: Page, flight = "TAM1234") {
+  await openLegacyMovements(page);
   await page.locator("#live-tab").click();
   await page
     .getByRole("button", { name: `Acompanhar ${flight}`, exact: true })
@@ -213,7 +214,7 @@ test("detalhes ficam acessíveis no celular e podem ser fechados", async ({
   await page.goto("/");
   await page.locator("#mobile-menu-toggle").click();
   await page
-    .getByRole("button", { name: "Próximos voos", exact: true })
+    .getByRole("button", { name: "Fila de aproximação", exact: true })
     .click();
   await selectFromList(page);
   await expect(page.locator("#mobile-panel")).toBeHidden();

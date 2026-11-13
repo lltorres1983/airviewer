@@ -29,6 +29,7 @@ function SpottingPanel({ storageKey }: { storageKey: string }) {
   const snapshot = useSyncExternalStore(subscribeAirportSnapshot, getAirportSnapshot);
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => { const show = () => setOpen(true); window.addEventListener('airviewer:open-spotting', show); return () => window.removeEventListener('airviewer:open-spotting', show); }, []);
   const [preferences, setPreferences] = useState(() => readPreferences(storageKey));
   const [alerts, setAlerts] = useState<{ key: string; text: string; hex: string; airport: string }[]>([]);
   const tracker = useRef(new SpottingTracker());

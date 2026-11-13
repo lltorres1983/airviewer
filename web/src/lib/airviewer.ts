@@ -175,7 +175,7 @@ export function startAirviewer() {
   const mobileTitles: Record<string, string> = {
     menu: "Menu",
     camera: "Câmera",
-    flights: "Próximos voos",
+    flights: "Torre e spotting",
     options: "Opções",
   };
   const mobileDestinations = (
@@ -277,7 +277,7 @@ export function startAirviewer() {
       if (
         mobileViewport.matches &&
         event.target instanceof Element &&
-        event.target.closest(".arrival-row, .schedule-row")
+        event.target.closest(".arrival-row, .schedule-row, .visual-approach-flight")
       )
         setMobileView("map");
     },
@@ -2672,6 +2672,7 @@ export function startAirviewer() {
   });
 
   const unsubscribeAirportCommands = subscribeAirportCommands(command => {
+    const keepQueueOpen = mobileView === "flights" && command.type === "airport";
     if (command.type === "airport") {
       airportSelect.value = command.code;
       airportSelect.dispatchEvent(new Event("change", { bubbles: true }));
@@ -2690,7 +2691,7 @@ export function startAirviewer() {
       const aircraft = lastAirportTraffic.find(row => row.hex === command.hex);
       if (aircraft && activeAirportCamera) selectLiveMovement(aircraft, activeAirportCamera, !towerRunway);
     }
-    if (mobileViewport.matches) setMobileView("map", false);
+    if (mobileViewport.matches) setMobileView(keepQueueOpen ? "flights" : "map", false);
   });
 
   let favoriteRequest = 0;

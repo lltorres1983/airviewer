@@ -338,10 +338,14 @@ A posição fica somente em memória e é limitada à área visível ao redimens
 No celular, cede espaço aos detalhes da aeronave selecionada ou ao menu aberto.
 Os botões compactos de atualização e abertura completa priorizam a área do mapa.
 
-O painel de movimentos usa altura automática conforme os voos, limitada a 360 px
-antes de rolar a lista. Ao redimensionar, as listas de programação e ao vivo
-ocupam toda a área disponível, sem o antigo limite interno de 190 px. O botão
-**Ajustar** restaura a altura automática e remove apenas a altura salva.
+O painel lateral abre **Torre e spotting** no antigo espaço de movimentos,
+priorizando a fila visual de aproximação de GRU/GIG. Mostra pista provável,
+distância, altitude e tempo estimado; a ordem não é autorização de pouso.
+A seleção de pista usa a torre fixa e clicar em um voo o acompanha no mapa.
+**Mais** abre meteorologia e alertas. A programação e os outros movimentos ficam
+recolhidos em uma seção secundária. O painel mantém arraste e redimensionamento.
+No celular, **Fila de aproximação** abre o mesmo painel; trocar aeroporto mantém
+a fila aberta e selecionar uma aeronave retorna ao mapa.
 
 Os painéis da tela inicial (câmera, movimentos, detalhes da aeronave, identificação,
 telemetria e controles; além do diagnóstico) podem ser movidos pelo cabeçalho ou
