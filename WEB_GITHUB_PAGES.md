@@ -353,3 +353,9 @@ O radar compacto também pode ser redimensionado pela alça no canto inferior di
 após ativar a localização. O mapa cresce junto com o painel. A alça aceita toque,
 mouse e setas do teclado; Home restaura o tamanho inicial. Recolher e expandir
 preserva o tamanho durante a sessão, com limites adaptados à tela.
+
+Radar e câmera priorizam a mídia: barras compactas, mapa/vídeo sem margens internas
+e ações do radar em ícones identificados por rótulos acessíveis. O status do radar
+compartilha a linha dos botões. Informações da transmissão, distância e link do
+YouTube ficam em **Info**, sem ocupar um rodapé permanente; o indicador **Ao vivo**
+ou **Arquivo** continua visível sobre o vídeo.

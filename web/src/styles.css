@@ -1635,3 +1635,34 @@ header[data-panel-drag], .arrivals-header[data-panel-drag], .airport-camera-head
 .mini-nearby .mini-radar-resize { display: grid; place-items: center; width: 30px; padding: 0; border: 0; background: transparent; cursor: nwse-resize; touch-action: none; }
 @media(max-width: 900px) { .mini-nearby .weather-traffic-map { height: min(var(--mini-map-height, 220px), max(120px, calc(100dvh - 360px))); } }
 @media(pointer: coarse) { .mini-nearby .mini-radar-resize { width: 40px; } }
+
+/* Media-first panels: one slim toolbar, edge-to-edge content. */
+.airport-camera-header { flex-wrap: nowrap; min-height: 34px; gap: 4px; padding: 2px 28px 2px 4px; }
+.airport-camera-header .panel-move-handle { width: 22px; min-height: 28px; }
+.airport-camera-title { flex: 1; min-width: 0; }
+.airport-camera-title strong { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px; }
+.airport-camera-source { flex: 0 1 110px; width: 110px; min-width: 60px; font-size: 10px; padding: 3px; }
+.airport-camera-header .airport-camera-close { width: 26px; min-width: 26px; min-height: 28px; height: 28px; padding: 0; font-size: 11px; }
+.airport-camera-video-grid { padding: 0; gap: 0; }
+.airport-camera-feed { width: 100%; height: 100%; }
+.airport-camera-feed #airport-camera-feed-title { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+.camera-kind { position: absolute; z-index: 1; left: 6px; top: 6px; padding: 2px 5px; color: #e0f2fe; background: #071521e8; border-radius: 3px; font-size: 10px; pointer-events: none; }
+.camera-info { flex-shrink: 0; font-size: 10px; }
+.camera-info summary { cursor: pointer; min-height: 28px; align-content: center; padding: 0 4px; color: #bae6fd; }
+.camera-info-content { position: absolute; z-index: 5; top: 36px; left: 8px; right: 8px; max-height: calc(100% - 44px); overflow: auto; padding: 12px; color: #dff5ff; background: #102334; border: 1px solid #49637a; border-radius: 8px; font-size: 12px; }
+.camera-info .airport-camera-note { max-height: none; margin: 8px 0; padding: 0; border: 0; background: transparent; font-size: 12px; }
+.camera-info-content a { color: #7ee8ff; }
+.mini-nearby { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0; padding: 0; }
+.mini-nearby > header, .mini-nearby > .weather-traffic, .mini-nearby > .mini-selected, .mini-nearby > [role=alert], .mini-nearby > small, .mini-nearby > p:not(.mini-nearby-status) { grid-column: 1 / -1; }
+.mini-nearby > header { padding: 2px 6px; }
+.mini-nearby > p, .mini-nearby > small { padding: 0 8px; }
+.mini-nearby .mini-nearby-status { margin: 0; padding: 6px 4px 6px 8px; align-self: center; font-size: 10px; }
+.mini-nearby-actions { align-self: center; gap: 2px; padding: 3px 5px 3px 0; }
+.mini-nearby-actions button { display: inline-grid; place-items: center; min-width: 28px; min-height: 28px; padding: 4px; border-color: transparent; background: transparent; }
+.mini-nearby-actions:has(button[aria-label="Ativar radar local"]) { grid-column: 1 / -1; justify-content: flex-start; padding: 6px; }
+.mini-nearby .weather-traffic-map { height: min(var(--mini-map-height, 280px), max(120px, calc(100dvh - 240px))); margin: 0; border: 0; border-radius: 0; }
+.mini-nearby .weather-details > summary { min-height: 22px; padding: 2px 8px; }
+.mini-nearby .weather-details[open] { padding-bottom: 8px; }
+.mini-nearby .weather-details > :not(summary) { margin-left: 8px; margin-right: 8px; }
+@media(max-width: 900px) { .mini-nearby .weather-traffic-map { height: min(var(--mini-map-height, 240px), max(120px, calc(100dvh - 300px))); } .mobile-panel .airport-camera-video-grid { flex: none; } .mobile-panel .airport-camera-feed { height: auto; } }
+@media(pointer: coarse) { .mini-nearby-actions button, .mini-nearby .mini-radar-collapse, .airport-camera-header .panel-move-handle, .airport-camera-header .airport-camera-close, .camera-info summary { min-height: 40px; min-width: 32px; } }

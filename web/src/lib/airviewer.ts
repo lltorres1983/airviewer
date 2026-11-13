@@ -1392,6 +1392,7 @@ export function startAirviewer() {
     }
     airportCameraFeedTitle.textContent =
       selectedSource?.label || "CAMERA PRINCIPAL";
+    element('airport-camera-kind').textContent = selectedSource?.isArchive ? 'Arquivo' : 'Ao vivo';
     airportCameraNote.textContent = selectedSource?.isArchive
       ? "ARQUIVO: este vídeo é uma gravação e não representa uma transmissão ao vivo."
       : "AO VIVO: se o canal não estiver transmitindo publicamente agora, o YouTube mostrará “sem transmissão ao vivo agora”. Nenhuma gravação é usada como fallback.";

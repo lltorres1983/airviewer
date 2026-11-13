@@ -142,23 +142,14 @@ export default function App() {
           <PanelMoveHandle panel=".airport-camera" label="Mover câmera do aeroporto" />
           <div className="airport-camera-title">
             <strong id="airport-camera-title">CAMERA AO VIVO</strong>
-            <span id="airport-camera-distance">
-              Aeronave proxima ao aeroporto
-            </span>
+
           </div>
           <select
             id="airport-camera-source"
             className="airport-camera-source"
             aria-label="Selecionar transmissao da camera"
           ></select>
-          <a
-            id="airport-camera-link"
-            href="https://www.youtube.com/"
-            target="_self"
-            rel="noopener noreferrer"
-          >
-            YouTube
-          </a>
+          <details className="camera-info"><summary aria-label="Informações da transmissão" title="Informações da transmissão">Info</summary><div className="camera-info-content"><span id="airport-camera-distance">Aeronave próxima ao aeroporto</span><p id="airport-camera-note" className="airport-camera-note">Se o vídeo estiver indisponível, escolha outra fonte.</p><a id="airport-camera-link" href="https://www.youtube.com/" target="_self" rel="noopener noreferrer">Abrir no YouTube</a></div></details>
           <Button
             variant="secondary"
             id="airport-camera-close"
@@ -172,7 +163,7 @@ export default function App() {
         </div>
         <div className="airport-camera-video-grid">
           <div className="airport-camera-feed">
-            <strong id="airport-camera-feed-title">CAMERA PRINCIPAL</strong>
+            <strong id="airport-camera-feed-title" className="sr-only">CAMERA PRINCIPAL</strong><span id="airport-camera-kind" className="camera-kind">Ao vivo</span>
             <iframe
               id="airport-camera-frame"
               title="Camera ao vivo do aeroporto"
@@ -181,10 +172,6 @@ export default function App() {
               allowFullScreen
             ></iframe>
           </div>
-        </div>
-        <div id="airport-camera-note" className="airport-camera-note">
-          Se aparecer “vídeo não disponível”, o YouTube bloqueou esta
-          incorporação; escolha a outra fonte no seletor acima.
         </div>
       </aside>
       <div className="controls">
