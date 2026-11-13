@@ -29,3 +29,46 @@ test('câmera única troca a transmissão e o vídeo acompanha o redimensionamen
   expect(mobile.width / mobile.height).toBeCloseTo(16 / 9, 1);
   await panel.screenshot({ path: 'test-results/camera-mobile.png' });
 });
+
+test('GRU oferece câmeras da Dutra, trata indisponibilidade e encerra a transmissão ao sair', async ({ page }) => {
+  await fixtures(page);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  const selector = page.locator('#airport-camera-source');
+  const video = page.locator('#airport-camera-video');
+  const frame = page.locator('#airport-camera-frame');
+  for (const id of ['dutra-210', 'dutra-225', 'dutra-202']) {
+    await expect(selector.locator(`option[value="${id}"]`)).toHaveCount(1);
+  }
+  await selector.selectOption('dutra-210');
+  await expect(video).toBeVisible();
+  await expect(frame).toBeHidden();
+  await expect(frame).not.toHaveAttribute('src');
+  await expect(page.locator('#airport-camera-error')).toBeVisible();
+  await page.locator('#airport-camera summary').click();
+  await expect(page.locator('#airport-camera-link')).toHaveText('Abrir na RioSP');
+  await expect(page.locator('#airport-camera-note')).toContainText('Via Dutra');
+  await page.locator('#airport-camera summary').click();
+  await page.locator('#airport-camera').screenshot({ path: 'test-results/dutra-desktop.png' });
+  await selector.selectOption('dutra-225');
+  await expect(video).toHaveAttribute('aria-label', 'Dutra · km 225 · Guarulhos');
+  await selector.selectOption('golf-live');
+  await expect(frame).toBeVisible();
+  await expect(video).toBeHidden();
+  await expect(video).not.toHaveAttribute('src');
+  await expect(page.locator('#airport-camera-error')).toBeHidden();
+  await selector.selectOption('dutra-202');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('#mobile-menu-toggle').click();
+  await page.getByRole('button', { name: 'Câmera do aeroporto', exact: true }).click();
+  await expect(video).toBeVisible();
+  const bounds = (await video.boundingBox())!;
+  expect(bounds.width / bounds.height).toBeCloseTo(16 / 9, 1);
+  await expect(page.locator('#airport-camera-error')).toBeVisible();
+  await page.locator('#airport-camera').screenshot({ path: 'test-results/dutra-mobile.png' });
+  await page.locator('#mobile-map').click();
+  await expect(video).not.toHaveAttribute('src');
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator('#airport-select').selectOption('GIG');
+  await expect(page.locator('#airport-camera')).toBeHidden();
+});

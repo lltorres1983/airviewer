@@ -1,3 +1,4 @@
+import { ExploreControls, MoreControls } from "@/components/explore-controls";
 import { TowerQueuePanel } from "@/components/tower-queue-panel";
 import { PanelMoveHandle } from "@/components/panel-move-handle";
 import { startPanelDragging } from "@/lib/panel-dragging";
@@ -175,6 +176,8 @@ export default function App() {
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             ></iframe>
+            <video id="airport-camera-video" hidden controls autoPlay muted playsInline aria-label="Câmera ao vivo da Via Dutra" />
+            <p id="airport-camera-error" className="airport-camera-error" hidden role="status">Transmissão indisponível. Escolha outra câmera ou <a href="https://rodovias.motiva.com.br/riosp/cameras-ao-vivo/" target="_blank" rel="noopener noreferrer">abra o site da RioSP</a>.</p>
           </div>
         </div>
       </aside>
@@ -189,6 +192,29 @@ export default function App() {
             <option value="SDU">SDU</option>
           </select>
         </label>
+        <div className="mode-switch" role="group" aria-label="Modo de visao">
+          <Button
+            variant="secondary"
+            id="aircraft-view-switch"
+            type="button"
+            title="Mostrar a visão da aeronave"
+          >
+            Aeronave
+          </Button>
+          <Button
+            variant="secondary"
+            id="airport-view-switch"
+            type="button"
+            title="Mostrar a visão do aeroporto"
+          >
+            Aeroporto
+          </Button>
+        </div>
+        <Button id="recenter" type="button">
+          Recentrar aeronave
+        </Button>
+        <ExploreControls />
+        <MoreControls>
         <label className="control-field" htmlFor="refresh-interval">
           Atualizar
           <select id="refresh-interval">
@@ -216,9 +242,6 @@ export default function App() {
           />
           <output id="camera-size-value" htmlFor="camera-size-control"></output>
         </label>
-        <Button id="recenter" type="button">
-          Recentrar aeronave
-        </Button>
         <Button
           variant="secondary"
           id="rotate-map"
@@ -227,24 +250,6 @@ export default function App() {
         >
           Girar mapa
         </Button>
-        <div className="mode-switch" role="group" aria-label="Modo de visao">
-          <Button
-            variant="secondary"
-            id="aircraft-view-switch"
-            type="button"
-            title="Mostrar a visão da aeronave"
-          >
-            Aeronave
-          </Button>
-          <Button
-            variant="secondary"
-            id="airport-view-switch"
-            type="button"
-            title="Mostrar a visão do aeroporto"
-          >
-            Aeroporto
-          </Button>
-        </div>
         <div
           className="cardinal-controls"
           role="group"
@@ -322,6 +327,7 @@ export default function App() {
         <Button variant="secondary" id="show-diagnostics" type="button">
           Diagnostico
         </Button>
+        </MoreControls>
         <Button variant="secondary" id="fullscreen" type="button">
           Tela cheia
         </Button>

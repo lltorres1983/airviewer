@@ -1,3 +1,5 @@
+import { startExploreMap } from "./explore-map";
+import { trafficCamera } from "./traffic-camera";
 import { RUNWAYS, bearing as runwayBearing, publishAirportSnapshot, subscribeAirportCommands } from "./airport-operations";
 import { getRadarOrigin, setRadarOrigin, subscribeRadarOrigin } from "./home-radar";
 import * as maplibregl from "maplibre-gl";
@@ -134,6 +136,11 @@ export function startAirviewer() {
   const refreshInterval = element("refresh-interval");
   const airportCamera = element("airport-camera");
   const airportCameraFrame = element("airport-camera-frame");
+  const roadCamera = trafficCamera(element("airport-camera-video"), element("airport-camera-error"));
+  function stopCamera() {
+    airportCameraFrame.removeAttribute("src");
+    roadCamera.stop();
+  }
   const airportCameraDistance = element("airport-camera-distance");
   const airportCameraTitle = element("airport-camera-title");
   const airportCameraLink = element("airport-camera-link");
@@ -204,7 +211,7 @@ export function startAirviewer() {
     if (mobileViewport.matches) {
       if (view === "camera") showAirportCamera();
       else {
-        airportCameraFrame.removeAttribute("src");
+        stopCamera();
       }
     }
     if (focus)
@@ -317,6 +324,12 @@ export function startAirviewer() {
           channelId: "UCbpmfj2g2tYuBezI2kEDhsg",
           externalUrl: "https://www.youtube.com/@GolfOscarRomeoAviacao/live",
         },
+        // Public HLS feeds from https://rodovias.motiva.com.br/riosp/cameras-ao-vivo/
+        ...[
+          { id: "dutra-210", label: "Dutra · km 210 · Guarulhos", streamUrl: "https://dlziwpy8wmigq.cloudfront.net/out/v1/3cda6b49f31b4e129cb917f78bf36c26/CMAF_HLS/index.m3u8" },
+          { id: "dutra-225", label: "Dutra · km 225 · Guarulhos", streamUrl: "https://d3b8201cy0qzzb.cloudfront.net/out/v1/4bd31ad7560846e08093f9552f92a8d0/CMAF_HLS/index.m3u8" },
+          { id: "dutra-202", label: "Dutra · km 202 · Arujá", streamUrl: "https://d3b8201cy0qzzb.cloudfront.net/out/v1/f7d3e1cb49d04cd9a8f4d18c17cb4d1f/CMAF_HLS/index.m3u8" },
+        ].map(source => ({ ...source, externalUrl: "https://rodovias.motiva.com.br/riosp/cameras-ao-vivo/" })),
       ],
       archiveSources: [
         {
@@ -1282,7 +1295,7 @@ export function startAirviewer() {
     const sources: CameraSource[] = [];
     (camera.liveSources || []).forEach((source) => {
       if (
-        !source?.channelId ||
+        (!source?.channelId && !source?.streamUrl) ||
         sources.some((existing) => existing.id === source.id)
       )
         return;
@@ -1378,7 +1391,7 @@ export function startAirviewer() {
     if (!activeAirportCamera || !getCameraSources(activeAirportCamera).length) {
       airportCamera.classList.add("hidden");
       cameraToggle.classList.add("hidden");
-      airportCameraFrame.removeAttribute("src");
+      stopCamera();
       airportCameraSource.classList.add("hidden");
       return;
     }
@@ -1386,14 +1399,24 @@ export function startAirviewer() {
     airportCamera.classList.remove("hidden");
     cameraToggle.classList.add("hidden");
     const selectedSource = updateCameraSourceOptions();
-    const embedUrl = cameraEmbedUrl(selectedSource);
-    if (airportCameraFrame.getAttribute("src") !== embedUrl) {
-      airportCameraFrame.src = embedUrl;
+    airportCameraFrame.hidden = Boolean(selectedSource?.streamUrl);
+    if (selectedSource?.streamUrl) {
+      airportCameraFrame.removeAttribute("src");
+      element("airport-camera-video").setAttribute("aria-label", selectedSource.label);
+      void roadCamera.show(selectedSource.streamUrl);
+    } else {
+      roadCamera.stop();
+      const embedUrl = cameraEmbedUrl(selectedSource);
+      if (airportCameraFrame.getAttribute("src") !== embedUrl) airportCameraFrame.src = embedUrl;
     }
+    airportCameraLink.textContent = selectedSource?.streamUrl ? "Abrir na RioSP" : "Abrir no YouTube";
+    if (selectedSource?.externalUrl) airportCameraLink.href = selectedSource.externalUrl;
     airportCameraFeedTitle.textContent =
       selectedSource?.label || "CAMERA PRINCIPAL";
     element('airport-camera-kind').textContent = selectedSource?.isArchive ? 'Arquivo' : 'Ao vivo';
-    airportCameraNote.textContent = selectedSource?.isArchive
+    airportCameraNote.textContent = selectedSource?.streamUrl
+      ? "AO VIVO: trânsito na Via Dutra. Fonte: RioSP / Motiva. A disponibilidade depende da concessionária; se necessário, escolha outra câmera ou abra o site da RioSP."
+      : selectedSource?.isArchive
       ? "ARQUIVO: este vídeo é uma gravação e não representa uma transmissão ao vivo."
       : "AO VIVO: se o canal não estiver transmitindo publicamente agora, o YouTube mostrará “sem transmissão ao vivo agora”. Nenhuma gravação é usada como fallback.";
   }
@@ -1455,7 +1478,7 @@ export function startAirviewer() {
       airportOverviewMode = true;
       airportCamera.classList.add("hidden");
       cameraToggle.classList.add("hidden");
-      airportCameraFrame.removeAttribute("src");
+      stopCamera();
       scheduleTab.hidden = true;
       liveTab.textContent = "AO REDOR DE CASA";
       setTrafficPanelMode("live");
@@ -1510,7 +1533,7 @@ export function startAirviewer() {
       cameraDismissed = false;
       airportCamera.classList.add("hidden");
       cameraToggle.classList.add("hidden");
-      airportCameraFrame.removeAttribute("src");
+      stopCamera();
       clearNearbyArrivals();
       updateAirportApproachVisibility();
       updateViewModeButton();
@@ -1526,7 +1549,7 @@ export function startAirviewer() {
       airportOverviewMode = !aircraft3dEnabled || !trackedAircraftHex;
       cameraDismissed = false;
       lastArrivalsFetch = 0;
-      airportCameraFrame.removeAttribute("src");
+      stopCamera();
     } else {
       activeAirportCamera = nearbyCamera;
     }
@@ -1550,7 +1573,7 @@ export function startAirviewer() {
     if (!getCameraSources(activeAirportCamera).length) {
       airportCamera.classList.add("hidden");
       cameraToggle.classList.add("hidden");
-      airportCameraFrame.removeAttribute("src");
+      stopCamera();
     } else if (cameraDismissed) cameraToggle.classList.remove("hidden");
     else showAirportCamera();
     publishOperations();
@@ -1894,6 +1917,7 @@ export function startAirviewer() {
     trackedMarkerElement.dataset.aircraftKind = kind;
   }
 
+  let stopExploreMap: (() => void) | undefined;
   function initMap() {
     map = new maplibregl.Map({
       container: "map",
@@ -2360,6 +2384,7 @@ export function startAirviewer() {
       void refreshAirportSchedule(true);
     });
 
+    stopExploreMap = startExploreMap(map);
     map.on("error", (event) => {
       const detail =
         event && event.error
@@ -2501,6 +2526,7 @@ export function startAirviewer() {
     "click",
     () => {
       cameraDismissed = true;
+      stopCamera();
       airportCamera.classList.add("hidden");
       cameraToggle.classList.remove("hidden");
     },
@@ -2572,7 +2598,7 @@ export function startAirviewer() {
       clearNearbyArrivals();
       activeAirportCamera = null;
       cameraDismissed = false;
-      airportCameraFrame.removeAttribute("src");
+      stopCamera();
       if (selectedAirportCode === "AUTO") {
         const camera = updateAirportCamera();
         if (camera) enterAirportPanorama(camera.code);
@@ -2598,11 +2624,16 @@ export function startAirviewer() {
     "click",
     () => {
       if (!document.fullscreenElement)
-        document.documentElement.requestFullscreen().catch(() => {});
-      else document.exitFullscreen();
+        document.documentElement.requestFullscreen?.().catch(() => { status.textContent = "Não foi possível abrir a tela inteira neste navegador."; });
+      else void document.exitFullscreen();
     },
     { signal: lifecycle.signal },
   );
+
+  document.addEventListener("fullscreenchange", () => {
+    element("fullscreen").textContent = document.fullscreenElement ? "Sair da tela inteira" : "Tela cheia";
+    map?.resize();
+  }, { signal: lifecycle.signal });
 
   syncMobileLayout();
   zoomControl.value = String(
@@ -2791,12 +2822,14 @@ export function startAirviewer() {
     mobileObserver.disconnect();
     controlsObserver.disconnect();
     document.documentElement.style.removeProperty("--controls-height");
-    airportCameraFrame.removeAttribute("src");
+    stopCamera();
+    roadCamera.dispose();
     mobileDestinations.forEach(({ element: node, placeholder }) => {
       placeholder.after(node);
       placeholder.remove();
     });
     marker?.remove();
+    stopExploreMap?.();
     map?.remove();
   };
 }

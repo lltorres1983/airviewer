@@ -6,6 +6,7 @@ export interface CameraSource {
   videoId?: string;
   channelId?: string;
   playlistId?: string;
+  streamUrl?: string;
   externalUrl?: string;
   isLive?: boolean;
   isArchive?: boolean;

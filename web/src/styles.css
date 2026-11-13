@@ -168,13 +168,17 @@ body,
   font-size: 10px;
   pointer-events: none;
 }
-.airport-camera-feed iframe {
+.airport-camera-feed iframe,
+.airport-camera-feed video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   border: 0;
 }
+.airport-camera-feed [hidden] { display: none; }
+.airport-camera-error { position: absolute; inset: 30px 12px auto; margin: 0; padding: 12px; color: #e0f2fe; background: #10273b; font-size: 12px; }
+.airport-camera-error a { color: #7dd3fc; text-decoration: underline; }
 .airport-camera-note {
   padding: 6px 9px;
   color: #bae6fd;
@@ -1700,3 +1704,81 @@ header[data-panel-drag], .arrivals-header[data-panel-drag], .airport-camera-head
 @media(max-width: 900px) { .mobile-panel .tower-dock { max-height: none; } .tower-queue-content { overflow: visible; } .tower-compact button, .tower-compact select { min-height: 40px; } }
 .tower-current-airport { color: #bdcedd; font-size: 11px; line-height: 1.4; }
 .tower-current-airport strong { color: #7ee8ff; }
+
+/* Exploration shares the map; expanded controls remain above the compact dock. */
+.more-controls, .more-controls-content { display: contents; }
+.more-controls > summary { display: none; }
+.explore-controls { position: relative; }
+.explore-controls > summary, .more-controls > summary {
+  list-style: none; align-items: center; justify-content: center; gap: 8px;
+  min-height: 42px; padding: 0 14px; color: #e0f2fe; background: #10273b;
+  border: 1px solid #365166; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.explore-controls > summary { display: flex; }
+.explore-controls > summary::-webkit-details-marker, .more-controls > summary::-webkit-details-marker { display: none; }
+.explore-controls[open] > summary, .more-controls[open].is-fullscreen > summary { background: #173f53; color: #a4e7ff; border-color: #66bfdc; }
+.explore-controls summary:hover, .more-controls summary:hover { background: #1b3c50; }
+.explore-controls summary:focus-visible, .more-controls summary:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 3px; }
+.explore-menu {
+  position: fixed; z-index: 25; bottom: calc(var(--controls-height, 100px) + 32px); right: 16px; width: 330px;
+  max-width: calc(100vw - 32px); max-height: min(620px, calc(100dvh - var(--controls-height, 100px) - 64px)); overflow-y: auto;
+  padding: 22px; color: #e0f2fe; background: #0b1c29; border-radius: 14px; box-shadow: 0 12px 36px #0008;
+  font-family: "Segoe UI", sans-serif;
+}
+.explore-menu h2 { margin: 0 0 6px; font-size: 19px; font-weight: 650; }
+.explore-menu > p { margin: 0 0 16px; color: #a9c7d9; font-size: 12px; line-height: 1.5; }
+.explore-option { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; border-top: 1px solid #294252; cursor: pointer; }
+.explore-option strong { display: block; font-size: 14px; font-weight: 600; }
+.explore-option small { display: block; margin-top: 4px; color: #a9c7d9; font-size: 12px; }
+.explore-option input { width: 20px; height: 20px; accent-color: #7dd3fc; flex-shrink: 0; }
+.explore-menu .explore-status { margin: -4px 0 10px; color: #b9e5f5; font-size: 11px; }
+.explore-status:empty { display: none; }
+.explore-opacity { display: grid; gap: 8px; margin: 12px 0; font-size: 12px; }
+.explore-opacity input { width: 100%; accent-color: #7dd3fc; }
+.explore-menu button { width: 100%; min-height: 40px; margin-bottom: 14px; }
+.explore-menu .explore-footnote { font-size: 11px; margin: 8px 0 0; }
+.explore-menu a { color: #93dcf8; text-decoration: underline; text-underline-offset: 3px; }
+@media (min-width: 901px) {
+  :fullscreen .controls {
+    left: 0 !important; right: 0 !important; top: auto !important; bottom: 20px !important;
+    transform: none !important; margin-inline: auto; width: max-content !important; max-width: calc(100vw - 40px) !important; max-height: none !important; overflow: visible !important; flex-wrap: wrap;
+    padding: 10px; gap: 8px; background: #0b1c29; border-radius: 16px; box-shadow: 0 10px 32px #0007;
+  }
+  :fullscreen .controls > .panel-move-handle { display: none; }
+  :fullscreen .controls > button, :fullscreen .controls > .control-field, :fullscreen .controls .mode-switch button {
+    min-height: 42px; border: 0; border-radius: 8px; background: #142f40; color: #e0f2fe; backdrop-filter: none; font-size: 12px;
+  }
+  :fullscreen .controls > .control-field { background: transparent; }
+  :fullscreen .controls .mode-switch { gap: 2px; padding: 3px; background: #142f40; border-radius: 10px; }
+  :fullscreen .controls .mode-switch button { min-height: 36px; background: transparent; }
+  :fullscreen .controls .mode-switch button[aria-pressed="true"] { background: #2b5970; color: #fff; }
+  :fullscreen .more-controls { display: block; }
+  :fullscreen .more-controls > summary { display: flex; }
+  :fullscreen .more-controls:not([open]) > .more-controls-content { display: none; }
+  :fullscreen .more-controls-content {
+    position: absolute; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    right: 0; bottom: calc(100% + 12px); width: 540px; max-width: calc(100vw - 40px);
+    max-height: calc(100dvh - 140px); overflow-y: auto; padding: 20px;
+    background: #0b1c29; border-radius: 14px; box-shadow: 0 12px 36px #0008;
+  }
+  :fullscreen .more-controls-content .control-field { flex: 1 1 210px; justify-content: space-between; }
+  :fullscreen .more-controls-content button { min-height: 40px; }
+  :fullscreen .controls > #fullscreen { color: #a9c7d9; background: transparent; }
+  :fullscreen .explore-menu { right: max(16px, calc(50% - 250px)); }
+}
+@media (max-width: 900px) {
+  .explore-menu { position: static; width: 100%; max-width: none; max-height: none; margin-top: 12px; box-shadow: none; }
+  .more-controls.is-fullscreen { display: contents; }
+  .more-controls.is-fullscreen > .more-controls-content { display: contents; }
+  .more-controls.is-fullscreen > summary { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :fullscreen .explore-menu, :fullscreen .more-controls-content { animation: map-menu-reveal 160ms ease-out; }
+  @keyframes map-menu-reveal { from { translate: 0 6px; } to { translate: 0 0; } }
+}
+.controls:has(.explore-controls[open]), .controls:has(.more-controls.is-fullscreen[open]) { z-index: 35 !important; overflow: visible !important; }
+
+.explore-legend { display: none; align-items: center; gap: 10px; color: #b9d6e5; font-size: 11px; }
+.explore-menu:has(#explore-rain:checked) .explore-legend { display: flex; }
+.explore-legend span { display: flex; align-items: center; gap: 4px; }
+.explore-legend i { width: 9px; height: 9px; border-radius: 2px; }
