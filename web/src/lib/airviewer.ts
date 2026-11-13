@@ -2677,7 +2677,7 @@ export function startAirviewer() {
       airportSelect.value = command.code;
       airportSelect.dispatchEvent(new Event("change", { bubbles: true }));
     } else if (command.type === "tower") {
-      if (!activeAirportCamera || !["GRU", "GIG"].includes(activeAirportCamera.code)) return;
+      if (!activeAirportCamera || !RUNWAYS.some(row => row.airport === activeAirportCamera!.code)) return;
       if (command.runway && !RUNWAYS.some(row => row.airport === activeAirportCamera!.code && row.ends.join("/") === command.runway)) return;
       towerRunway = command.runway;
       airportOverviewMode = true;

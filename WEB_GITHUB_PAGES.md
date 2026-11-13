@@ -339,7 +339,7 @@ No celular, cede espaço aos detalhes da aeronave selecionada ou ao menu aberto.
 Os botões compactos de atualização e abertura completa priorizam a área do mapa.
 
 O painel lateral abre **Torre e spotting** no antigo espaço de movimentos,
-priorizando a fila visual de aproximação de GRU/GIG. Mostra pista provável,
+priorizando a fila visual de aproximação do aeroporto selecionado (GRU, GIG ou SDU). Mostra pista provável,
 distância, altitude e tempo estimado; a ordem não é autorização de pouso.
 A seleção de pista usa a torre fixa e clicar em um voo o acompanha no mapa.
 **Mais** abre meteorologia e alertas. A programação e os outros movimentos ficam
@@ -363,3 +363,9 @@ e ações do radar em ícones identificados por rótulos acessíveis. O status d
 compartilha a linha dos botões. Informações da transmissão, distância e link do
 YouTube ficam em **Info**, sem ocupar um rodapé permanente; o indicador **Ao vivo**
 ou **Arquivo** continua visível sobre o vídeo.
+
+A fila compacta segue exclusivamente o controle principal **Aeroporto**. O título
+identifica o aeroporto ativo; não há um seletor GRU/GIG independente no painel.
+SDU inclui fila, pistas de torre, alertas e meteorologia SBRJ; no modo automático,
+a fila acompanha o aeroporto ativo do mapa. Ao trocar a região, o feed anterior
+é limpo enquanto as novas posições são consultadas.

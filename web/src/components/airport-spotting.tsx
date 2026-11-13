@@ -73,8 +73,8 @@ function SpottingPanel({ storageKey }: { storageKey: string }) {
     const timer = setInterval(() => { if (!document.hidden) void load(); }, 300000);
     return () => { controller.abort(); clearInterval(timer); };
   }, [open, weatherRevision]);
-  const supported = ['GRU', 'GIG'].includes(snapshot.code);
-  const station = snapshot.code === 'GIG' ? 'SBGL' : 'SBGR';
+  const supported = RUNWAYS.some(runway => runway.airport === snapshot.code);
+  const station = snapshot.code === 'GIG' ? 'SBGL' : snapshot.code === 'SDU' ? 'SBRJ' : 'SBGR';
   const stale = !snapshot.receivedAt || now - snapshot.receivedAt > 60000;
   const queue = useMemo(() => approachQueue(snapshot.code, snapshot.traffic, snapshot.elevation), [snapshot]);
   const metar = weather?.metars.filter(row => row.icaoId === station).sort((a, b) => b.obsTime - a.obsTime)[0];
@@ -94,11 +94,11 @@ function SpottingPanel({ storageKey }: { storageKey: string }) {
             <Dialog.Title>Torre e spotting</Dialog.Title>
             <Dialog.Close asChild><Button type="button" variant="ghost" aria-label="Fechar torre e spotting">Fechar</Button></Dialog.Close>
           </div>
-          <Dialog.Description>Acompanhe GRU e GIG sem perder o mapa.</Dialog.Description>
+          <Dialog.Description>Acompanhe o aeroporto selecionado sem perder o mapa.</Dialog.Description>
           <div className="spotting-airports" aria-label="Aeroporto do spotting">
-            {(['GRU', 'GIG'] as const).map(code => <Button key={code} variant="secondary" type="button" aria-pressed={snapshot.code === code} onClick={() => airportCommand({ type: 'airport', code })}>{code === 'GRU' ? 'GRU · Guarulhos' : 'GIG · Galeão'}</Button>)}
+            {(['GRU', 'GIG', 'SDU'] as const).map(code => <Button key={code} variant="secondary" type="button" aria-pressed={snapshot.code === code} onClick={() => airportCommand({ type: 'airport', code })}>{code === 'GRU' ? 'GRU · Guarulhos' : code === 'GIG' ? 'GIG · Galeão' : 'SDU · Santos Dumont'}</Button>)}
           </div>
-          {!supported ? <p role="status">Escolha GRU ou GIG para abrir a torre, a meteorologia e as aproximações.</p> : <>
+          {!supported ? <p role="status">Selecione um aeroporto para abrir a torre, a meteorologia e as aproximações.</p> : <>
             <section aria-labelledby="tower-heading">
               <h3 id="tower-heading">Vista da pista</h3>
               <p>Ponto virtual junto à pista. A câmera permanece fixa ao selecionar aeronaves.</p>

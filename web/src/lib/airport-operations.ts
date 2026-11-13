@@ -24,26 +24,29 @@ export function bearing(a: [number, number], b: [number, number]) {
 const difference = (a: number, b: number) => Math.abs(((a - b + 540) % 360) - 180);
 export type Approach = { aircraft: TrafficAircraft; runway: string | null; distance: number; minutes: number | null };
 export function approachQueue(airport: string, traffic: TrafficAircraft[], elevation: number): Approach[] {
-  if (!['GRU', 'GIG'].includes(airport)) return [];
+  if (!RUNWAYS.some(runway => runway.airport === airport)) return [];
   return traffic.filter(a => !a.onGround && a.distance <= 60 && a.headingDifference < 60 &&
     a.altitude < elevation + 12000 && a.verticalRate <= 500 && a.groundSpeed >= 60)
-    .map(aircraft => {
+    .flatMap(aircraft => {
       const position: [number, number] = [aircraft.lon, aircraft.lat];
-      const candidates = RUNWAYS.filter(r => r.airport === airport).flatMap(r => r.ends.map((name, i) => {
+      const allCandidates = RUNWAYS.flatMap(r => r.ends.map((name, i) => {
         const threshold = r.coordinates[i], opposite = r.coordinates[1 - i];
         const axis = bearing(threshold, opposite), toThreshold = bearing(position, threshold);
         const distance = distanceKm(position, threshold);
         const crossTrack = Math.abs(Math.sin(rad(difference(toThreshold, axis))) * distance);
-        return { name, distance, crossTrack, alignment: difference(aircraft.track, axis), inbound: difference(toThreshold, axis) };
+        return { airport: r.airport, name, distance, crossTrack, alignment: difference(aircraft.track, axis), inbound: difference(toThreshold, axis) };
       })).filter(r => r.alignment <= 25 && r.inbound <= 20 && r.crossTrack < 1 && r.distance <= 35)
         .sort((a, b) => a.crossTrack - b.crossTrack);
+      const candidates = allCandidates.filter(row => row.airport === airport);
+      // Nearby airports share the traffic feed; reject a clear approach to another runway.
+      if (!candidates.length && allCandidates.length) return [];
       const best = candidates[0];
       // Parallel runways are ambiguous until the lateral position distinguishes them.
       const ambiguous = candidates[1] && Math.abs(candidates[1].crossTrack - best.crossTrack) < 0.15;
       const distance = best?.distance ?? aircraft.distance;
       const closingSpeed = aircraft.groundSpeed * 1.852 * Math.cos(rad(aircraft.headingDifference));
-      return { aircraft, runway: best && !ambiguous ? best.name : null, distance,
-        minutes: closingSpeed > 60 ? Math.max(1, Math.round(distance / closingSpeed * 60)) : null };
+      return [{ aircraft, runway: best && !ambiguous ? best.name : null, distance,
+        minutes: closingSpeed > 60 ? Math.max(1, Math.round(distance / closingSpeed * 60)) : null }];
     }).sort((a, b) => a.distance - b.distance);
 }
 
@@ -56,7 +59,7 @@ const listeners = new Set<() => void>();
 export const getAirportSnapshot = () => snapshot;
 export function publishAirportSnapshot(next: AirportSnapshot) { snapshot = next; listeners.forEach(fn => fn()); }
 export function subscribeAirportSnapshot(fn: () => void) { listeners.add(fn); return () => { listeners.delete(fn); }; }
-export type AirportCommand = { type: 'airport'; code: 'GRU' | 'GIG' } | { type: 'tower'; runway: string | null } | { type: 'aircraft'; hex: string };
+export type AirportCommand = { type: 'airport'; code: 'GRU' | 'GIG' | 'SDU' } | { type: 'tower'; runway: string | null } | { type: 'aircraft'; hex: string };
 const commands = new Set<(command: AirportCommand) => void>();
 export function airportCommand(command: AirportCommand) { commands.forEach(fn => fn(command)); }
 export function subscribeAirportCommands(fn: (command: AirportCommand) => void) { commands.add(fn); return () => { commands.delete(fn); }; }
@@ -65,7 +68,7 @@ export type SpottingRule = { enabled: boolean; models: string[]; registrations: 
 export class SpottingTracker {
   private seen = new Map<string, number>();
   detect(snapshot: AirportSnapshot, rule: SpottingRule, now = Date.now()) {
-    if (!rule.enabled || !['GRU', 'GIG'].includes(snapshot.code) || !snapshot.receivedAt || now - snapshot.receivedAt > 60000) return [];
+    if (!rule.enabled || !RUNWAYS.some(runway => runway.airport === snapshot.code) || !snapshot.receivedAt || now - snapshot.receivedAt > 60000) return [];
     for (const [key, lastSeen] of this.seen) if (now - lastSeen > 15 * 60000) this.seen.delete(key);
     const matches = snapshot.traffic.filter(a => a.distance <= rule.radius &&
       (rule.models.includes(a.type.toUpperCase()) || rule.registrations.includes(a.registration.toUpperCase()) || rule.favorites.includes(a.hex.toLowerCase())));

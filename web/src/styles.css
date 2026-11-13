@@ -1698,3 +1698,5 @@ header[data-panel-drag], .arrivals-header[data-panel-drag], .airport-camera-head
 .tower-other-movements[open] { max-height: 45vh; overflow: auto; }
 .tower-other-movements .arrivals-list, .tower-other-movements .schedule-list { max-height: 260px; }
 @media(max-width: 900px) { .mobile-panel .tower-dock { max-height: none; } .tower-queue-content { overflow: visible; } .tower-compact button, .tower-compact select { min-height: 40px; } }
+.tower-current-airport { color: #bdcedd; font-size: 11px; line-height: 1.4; }
+.tower-current-airport strong { color: #7ee8ff; }

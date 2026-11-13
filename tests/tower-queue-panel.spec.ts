@@ -7,7 +7,7 @@ test('fila visual abre no lugar de movimentos, seleciona voo e preserva torre', 
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
   const dock = page.getByRole('complementary', { name: 'Torre e spotting do aeroporto' });
-  await expect(dock.getByRole('heading', { name: 'Fila de aproximação' })).toBeVisible();
+  await expect(dock.getByRole('heading', { name: 'Fila de aproximação · GRU' })).toBeVisible();
   await expect(dock.locator('.visual-approach-flight')).toHaveCount(6);
   await expect(page.locator('#schedule-list')).not.toBeVisible();
   await dock.getByLabel('Pista da torre compacta').selectOption('10L/28R');
@@ -36,8 +36,30 @@ test('fila móvel troca aeroporto e volta ao mapa ao selecionar', async ({ page 
   await expect(page.locator('#mobile-panel')).toBeHidden();
   await page.getByRole('button', { name: 'Fechar detalhes da aeronave' }).click();
   await page.locator('#mobile-menu-toggle').click(); await page.getByRole('button', { name: 'Fila de aproximação', exact: true }).click();
-  await dock.getByRole('button', { name: 'Selecionar GIG na fila' }).click();
+  await page.locator('#mobile-menu-toggle').click();
+  await page.locator('#airport-select').selectOption('GIG');
+  await page.getByRole('button', { name: 'Fila de aproximação', exact: true }).click();
   await expect(dock.locator('h2')).toContainText('GIG');
   await expect(dock.locator('.visual-approach-flight')).toHaveCount(0);
   await expect(dock).toContainText('Nenhuma aproximação identificada');
+});
+
+test('fila segue o seletor principal em GRU, SDU e GIG, sem misturar voos', async ({ page }) => {
+  await fixtures(page, [
+    { ...traffic[0], flight: 'GRU1000' },
+    { ...traffic[0], hex: 'abc777', flight: 'SDU2000', lat: -22.94, lon: -43.1627, track: 358, alt_baro: 1500 },
+    { ...traffic[0], hex: 'abc888', flight: 'GIG3000', lat: -22.82, lon: -43.34, track: 77, alt_baro: 2000 },
+  ]);
+  await page.goto('/');
+  const dock = page.getByRole('complementary', { name: 'Torre e spotting do aeroporto' });
+  for (const [code, flight] of [['GRU', 'GRU1000'], ['SDU', 'SDU2000'], ['GIG', 'GIG3000']]) {
+    await page.locator('#airport-select').selectOption(code);
+    await expect(dock.getByRole('heading', { name: `Fila de aproximação · ${code}` })).toBeVisible();
+    await expect(dock.locator('.visual-approach-flight')).toHaveCount(1);
+    await expect(dock.locator('.visual-approach-flight')).toContainText(flight);
+    if (code === 'SDU') {
+      await dock.getByLabel('Pista da torre compacta').selectOption('02L/20R');
+      await expect(page.locator('html')).toHaveAttribute('data-airport-view', 'tower');
+    }
+  }
 });

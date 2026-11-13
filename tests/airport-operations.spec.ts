@@ -57,3 +57,12 @@ test('meteorologia rejeita produtos malformados sem quebrar o painel', () => {
   expect(validWeatherData({ ...base, tafs: [{ icaoId: 'SBGR', rawTAF: 'TAF', issueTime: base.generatedAt, validTimeFrom: 1, validTimeTo: 2, fcsts: [null] }] })).toBe(false);
   expect(validWeatherData({ ...base, metars: [{ icaoId: 'SBGR', rawOb: 'METAR', obsTime: 1, clouds: {} }] })).toBe(false);
 });
+
+test('aproximação alinhada ao GIG não entra na fila do SDU', () => {
+  const inbound = { ...aircraft, lat: -22.82, lon: -43.34, track: 77, altitude: 2000, distance: 20, headingDifference: 35 };
+  expect(approachQueue('GIG', [inbound], 0)).toHaveLength(1);
+  expect(approachQueue('SDU', [inbound], 0)).toEqual([]);
+  const sdu = { ...inbound, lat: -22.94, lon: -43.1627, track: 358, altitude: 1500 };
+  expect(approachQueue('SDU', [sdu], 0)).toHaveLength(1);
+  expect(approachQueue('GIG', [sdu], 0)).toEqual([]);
+});
